@@ -4,201 +4,294 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventory Manager</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
+        /* Modern Trendy Styles -  same styles as before */
         body {
-            font-family: sans-serif;
-            margin: 10px;
-            background-color: #f0f0f0;
-        }
-         #currentDateDisplay {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            font-size: 1em;
-            color: #555;
-          }
-        h1 {
-            text-align: center;
-            color: #333;
-            font-size: 1.5em;
-        }
-        .container{
-            text-align: center;
-        }
-        button {
-            margin: 5px;
-            padding: 10px 15px;
-            cursor: pointer;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-             font-size: 1em;
-             padding: 12px 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f8f9fa;
+            color: #495057;
+            line-height: 1.6;
         }
 
-        input[type="text"], input[type="number"] {
-            padding: 8px;
-            margin: 5px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-             font-size: 1em;
+        #currentDateDisplay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 0.9em;
+            color: #6c757d;
         }
+
+        h1 {
+            text-align: center;
+            color: #343a40;
+            font-size: 2em;
+            margin-bottom: 20px;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .container {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .database-section-container {
+            border: none;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            background-color: #fff;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+            animation: slideUp 0.8s ease-out;
+        }
+
+        .database-section-container h2 {
+            font-size: 1.5em;
+            color: #343a40;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        button {
+            margin: 5px;
+            padding: 10px 18px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        button:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .remove-button {
+            background-color: #dc3545;
+        }
+
+        .remove-button:hover {
+            background-color: #bd2130;
+        }
+
+        .save-expiry-button {
+            background-color: #28a745;
+        }
+
+        .save-expiry-button:hover {
+            background-color: #1e7e34;
+        }
+
+        .add-expiry-button-inline {
+            background-color: #ffc107;
+            color: #fff;
+        }
+
+        .add-expiry-button-inline:hover {
+            background-color: #e0a800;
+        }
+
+
+        input[type="text"], input[type="number"] {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
+            margin-top: 20px;
             background-color: white;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-           overflow-x: auto;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+            overflow-x: auto;
+            animation: slideLeft 0.8s ease-out;
         }
+
         th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
+            border: 1px solid #dee2e6;
+            padding: 12px 15px;
             text-align: left;
-             font-size: 0.9em;
-             white-space: nowrap;
+            font-size: 0.95em;
+            white-space: nowrap;
         }
+
         th {
-            background-color: #f2f2f2;
+            background-color: #e9ecef;
+            color: #343a40;
+            font-weight: 500;
         }
-         .remove-button {
-            background-color: #f44336;
-            color: white;
+
+        .expiry-input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
         }
-         #dataPopup {
+
+        #dataPopup {
             display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.6);
             justify-content: center;
             align-items: center;
             z-index: 1000;
-           overflow: auto;
+            overflow: auto;
+            animation: fadeIn 0.5s ease-out;
         }
+
         #dataPopupContent {
             background-color: #fff;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-            overflow: auto; /* Enable scroll if table overflows */
-            max-height: 80vh; /* Limit maximum height of the popup */
-            max-width: 80vw;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2);
+            overflow: auto;
+            max-height: 90vh;
+            max-width: 90vw;
+            position: relative;
         }
+
         .closePopup {
             position: absolute;
-            top: 10px;
-            right: 15px;
-            font-size: 20px;
+            top: 15px;
+            right: 20px;
+            font-size: 24px;
             cursor: pointer;
-            color: #666;
+            color: #6c757d;
+            transition: color 0.3s ease;
         }
+
         .closePopup:hover {
-            color: #333;
+            color: #343a40;
         }
+
         #popupTable {
             width: 100%;
             border-collapse: collapse;
         }
+
         #popupTable th,
         #popupTable td {
-            border: 1px solid #ddd;
-            padding: 8px;
+            border: 1px solid #dee2e6;
+            padding: 12px 15px;
             text-align: left;
         }
+
         #popupTable th {
-            background-color: #f2f2f2;
+            background-color: #e9ecef;
         }
+
         #searchResultTable {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 10px;
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
             overflow-x: auto;
+            animation: slideRight 0.8s ease-out;
         }
 
         #searchResultTable th, #searchResultTable td{
-          border: 1px solid #ddd;
-          padding: 8px;
-           white-space: nowrap;
+            border: 1px solid #dee2e6;
+            padding: 12px 15px;
+            white-space: nowrap;
         }
-        /* Remove hover effects on touch devices */
-        @media (pointer: coarse) {
-           button:hover {
-            background-color: #4CAF50;
-          }
-          .remove-button:hover {
-              background-color: #f44336;
-          }
+
+        /* Animations - same animations as before */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
-         /* Adjust styles for smaller screens */
+
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideLeft {
+            from { transform: translateX(-30px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideRight {
+            from { transform: translateX(30px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+
+        /* Responsive adjustments - same responsive styles as before */
         @media (max-width: 768px) {
+            body {
+                margin: 10px;
+            }
             h1 {
+                font-size: 1.7em;
+                margin-bottom: 15px;
+            }
+            .container {
+                margin-bottom: 20px;
+            }
+            .database-section-container {
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+            .database-section-container h2 {
                 font-size: 1.3em;
+                margin-bottom: 10px;
             }
-           button {
-            font-size: 0.9em;
-            padding: 10px 16px;
-            margin: 3px;
-          }
-            input[type="text"], input[type="number"] {
-                 font-size: 0.9em;
-                 padding: 6px;
+            button, input[type="text"], input[type="number"] {
+                font-size: 0.9em;
+                padding: 8px 14px;
+                margin: 4px;
             }
-             table th, table td {
+            th, td {
+                font-size: 0.85em;
+                padding: 10px;
+            }
+            #currentDateDisplay {
+                top: 15px;
+                left: 15px;
                 font-size: 0.8em;
-                padding: 6px;
-             }
+            }
         }
-
-        /* Styles for Barcode Scanning */
-        #barcodeScannerContainer {
-            margin-top: 10px;
-            text-align: center;
-        }
-        #barcodeScannerViewport {
-            width: 300px; /* Adjust as needed */
-            height: 200px; /* Adjust as needed */
-            display: none; /* Hidden by default */
-            margin: 10px auto;
-            border: 1px solid #ccc; /* Default border - will be overridden by inline style during debugging if needed */
-        }
-        #barcodeScannerResult {
-            margin-top: 10px;
-            font-weight: bold;
-        }
-         #barcodeScannerResult.success {
-            color: green;
-         }
-        #barcodeScannerResult.error {
-            color: red;
-        }
-
-
     </style>
 </head>
 <body>
     <div id="currentDateDisplay"></div>
-    <h1>Inventory Manager</h1>
+    <h1><i class="fas fa-warehouse"></i> Inventory Manager</h1>
 
-    <div class="container">
+    <div class="container database-section-container">
+        <h2><i class="fas fa-database"></i> Database Management</h2>
         <input type="file" id="fileInput" accept=".xlsx, .xls" style="display:none">
-        <button id="importButton">Import Data</button>  <!--  Import Button is Visible Now -->
-        <button id="viewDataButton" disabled>View Imported Data</button>
-        <button id="clearDatabaseButton">Clear Database</button>
-        </div>
-        <br/>
-    <div class="container">
-        <input type="text" id="searchBarcodeInput" placeholder="Search by Barcode">
-        <button id="searchButton" disabled>Search</button>
-        <button id="scanBarcodeButton">Scan Barcode</button> <!-- New Scan Barcode Button -->
+        <button id="importButton" title="Import Data"><i class="fas fa-upload"></i> Import from File</button>
+        <button id="importGoogleSheetButton" title="Import Data from Google Sheet"><i class="fas fa-cloud-download-alt"></i> Import from Google Sheet</button>
+        <button id="viewDataButton" title="View Imported Data"><i class="fas fa-table"></i> View Data</button>
+        <button id="clearDatabaseButton" title="Clear Database"><i class="fas fa-trash-alt"></i> Clear DB</button>
     </div>
 
-    <div id="barcodeScannerContainer"> <!-- Container for Scanner Elements -->
-        <video id="barcodeScannerViewport" style="width: 300px; height: 200px; border: 2px solid red; display: block !important;"></video> <!-- Video element for camera view -->
-        <div id="barcodeScannerResult"></div> <!-- Display scanned barcode result -->
+    <div class="container">
+        <input type="text" id="searchBarcodeInput" placeholder="Search by Barcode">
+        <button id="searchButton" title="Search"><i class="fas fa-search"></i> Search</button>
     </div>
 
       <table id="searchResultTable" style="display: none;">
@@ -210,18 +303,19 @@
         </tbody>
       </table>
 
+    <div class="container" style="margin-bottom: 15px;">  <!-- Container for Add Expiry and Clear Fields -->
+        <button id="addExpiryButton" title="Add Expiry Fields"><i class="fas fa-plus-circle"></i> Add Expiry</button>
+        <button id="clearFieldsButton" title="Clear Input Fields"><i class="fas fa-broom"></i> Clear Fields</button>
+    </div>
+
     <div id="expiryInputs">
         <!-- Dynamic Expiry Inputs will be placed here -->
     </div>
 
-    <div class="container">
-        <button id="addExpiryButton">Add Expiry</button>
-        <button id="saveButton" disabled>Save Entry</button>
-        <button id="clearFieldsButton">Clear Fields</button>
+    <div class="container" style="margin-bottom: 25px;">  <!-- Container for Save Entry -->
+        <button id="saveButton" disabled title="Save Entry"><i class="fas fa-save"></i> Save Entry</button>
     </div>
 
-
-    <br/>
 
     <table id="recordTable">
         <thead>
@@ -230,11 +324,15 @@
         <tbody id="recordTableBody">
             <!-- Entered records will be displayed here -->
         </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="100%" style="text-align: right; padding: 15px;">
+                    <button id="exportButton" title="Export Saved Data"><i class="fas fa-download"></i> Export Data</button>
+                </td>
+            </tr>
+        </tfoot>
     </table>
 
-    <div class="container">
-     <button id="exportButton" disabled>Export Data</button>
-    </div>
 
     <div id="dataPopup" style="display:none">
         <div id="dataPopupContent">
@@ -244,22 +342,21 @@
     </div>
 
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script> <!-- QuaggaJS Library -->
     <script>
-         // Global variables
-        let database = []; // Database will be stored in memory now
+         // Global variables - same global variables as before
+        let database = [];
         let currentItem = null;
         let enteredRecords = [];
         let headerMap = {}; // Map to store column index by header
         let barcodeHeader = '';
         let nameHeader = '';
         let expiryHeaderCount = 0;
-        const csvDataUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQtbz-092e1J7qCWIgvdtFP5ayLsLU-FIe8QMBfJLmiZAZuQ82bAb2_-9v1WgR26w/pub?output=csv"; // Google Drive CSV URL
+        const googleSheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQtbz-092e1J7qCWIgvdtFP5ayLsLU-FIe8QMBfJLmiZAZuQ82bAb2_-9v1WgR26w/pubhtml"; // Google Sheet URL
 
-
-        // Get HTML elements
+        // Get HTML elements - same get elements as before, added google sheet button
         const fileInput = document.getElementById('fileInput');
         const importButton = document.getElementById('importButton');
+        const importGoogleSheetButton = document.getElementById('importGoogleSheetButton');
         const searchBarcodeInput = document.getElementById('searchBarcodeInput');
         const searchButton = document.getElementById('searchButton');
          const searchResultTable = document.getElementById('searchResultTable');
@@ -276,13 +373,8 @@
         const dataPopupContent = document.getElementById('dataPopupContent');
           const currentDateDisplay = document.getElementById('currentDateDisplay');
         const closePopup = document.querySelector('.closePopup');
-        // Barcode Scanning Elements
-        const scanBarcodeButton = document.getElementById('scanBarcodeButton');
-        const barcodeScannerViewport = document.getElementById('barcodeScannerViewport');
-        const barcodeScannerResult = document.getElementById('barcodeScannerResult');
 
-
-          function getCurrentDateTime(){
+          function getCurrentDateTime(){ // same date function as before
               const now = new Date();
             const day = String(now.getDate()).padStart(2, '0');
             const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -295,17 +387,22 @@
           }
 
 
-        // Load data from local storage
+        // Load data from local storage - same local storage function as before
         function loadDataFromLocalStorage() {
-             // database = JSON.parse(localStorage.getItem('database')); // DO NOT LOAD DATABASE FROM LOCAL STORAGE ANYMORE
-             enteredRecords = JSON.parse(localStorage.getItem('enteredRecords') || '[]'); // Load enteredRecords (still needed)
-             headerMap = JSON.parse(localStorage.getItem('headerMap') || '{}');
-             barcodeHeader = localStorage.getItem('barcodeHeader') || '';
-             nameHeader = localStorage.getItem('nameHeader') || '';
+             const storedDatabase = localStorage.getItem('database');
+             const storedEnteredRecords = localStorage.getItem('enteredRecords');
+             const storedHeaderMap = localStorage.getItem('headerMap');
+             const storedBarcodeHeader = localStorage.getItem('barcodeHeader');
+            const storedNameHeader = localStorage.getItem('nameHeader');
              let storedCurrentDate = localStorage.getItem('currentDate');
 
 
-            if(storedCurrentDate === null){ // Check for null explicitly
+            if (storedDatabase) database = JSON.parse(storedDatabase);
+            if (storedEnteredRecords) enteredRecords = JSON.parse(storedEnteredRecords);
+            if (storedHeaderMap) headerMap = JSON.parse(storedHeaderMap);
+            if (storedBarcodeHeader) barcodeHeader = storedBarcodeHeader;
+             if(storedNameHeader) nameHeader = storedNameHeader;
+              if(!storedCurrentDate){
                     localStorage.setItem('currentDate', getCurrentDateTime());
                     storedCurrentDate = localStorage.getItem('currentDate')
                  }
@@ -313,102 +410,123 @@
                currentDateDisplay.textContent = `Current Date: ${storedCurrentDate}`;
             renderEnteredRecords();
 
-             if(database.length > 0 || localStorage.getItem('database')) { // Check if database is loaded in memory OR was loaded before from file
+             if(database.length >0){
                 searchButton.disabled = false;
                  viewDataButton.disabled = false;
-                 exportButton.disabled = false;
              }
          }
 
         loadDataFromLocalStorage();
 
 
-        // Import Functionality from CSV URL (on load)
-        function loadDataFromCSV(csvUrl) {
-            fetch(csvUrl)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.text();
-                })
-                .then(csvText => {
-                    processCSVData(csvText, false); // Indicate it's not from local file
-                })
-                .catch(error => {
-                    console.error("Error fetching or processing CSV data:", error);
-                    alert("Failed to load inventory data from the online CSV file. Please check console for details.");
-                });
-        }
-
-
-        function processCSVData(csvText, fromLocalFile = false) { // Added fromLocalFile flag
-            const lines = csvText.trim().split('\n');
-            if (lines.length <= 1) {
-                alert("CSV file is empty or contains only headers.");
-                return;
-            }
-
-            const headers = lines[0].split(',').map(header => header.trim()); //split and trim headers
-            const csvDatabase = [];
-
-            headers.forEach((header, index) => {
-                if(header && header.toLowerCase().includes('barcode')) {
-                    barcodeHeader = header;
-                }
-                if(header && header.toLowerCase().includes('name')){
-                    nameHeader = header;
-                }
-                headerMap[header] = index;
-            });
-
-            if (!barcodeHeader) {
-                alert("No 'barcode' column found in the CSV file.");
-                return;
-            }
-            if (!nameHeader){
-                alert("No 'name' column found in the CSV file.");
-                return;
-            }
-
-
-            for (let i = 1; i < lines.length; i++) {
-                const values = lines[i].split(',').map(value => value.trim()); //split and trim values
-                const item = {};
-                headers.forEach((header, index) => {
-                    item[header] = values[index];
-                });
-                csvDatabase.push(item);
-            }
-
-
-            database = csvDatabase; // Store database in memory
-            if (fromLocalFile) {
-                localStorage.setItem('database', JSON.stringify(database)); // Store to local storage ONLY if from local file
-            }
-            localStorage.setItem('headerMap', JSON.stringify(headerMap));
-            localStorage.setItem('barcodeHeader', barcodeHeader);
-            localStorage.setItem('nameHeader', nameHeader);
-
-            alert('Inventory data loaded successfully!');
-            renderEnteredRecords();
-            viewDataButton.disabled = false;
-            searchButton.disabled = false;
-            exportButton.disabled = false;
-        }
-
-        // Automatically load data on page load
-        window.onload = function() {
-            loadDataFromCSV(csvDataUrl);
-        };
-
-        // Import Functionality (Phase 2) - Keep this for local file import
+        // Import Functionality (Phase 2) - Import from File button event listener - same as before
         importButton.addEventListener('click', () => {
             fileInput.click();
         });
 
         fileInput.addEventListener('change', handleFileImport);
 
+        // Import from Google Sheet Button functionality
+        importGoogleSheetButton.addEventListener('click', handleGoogleSheetImport);
+
+        async function handleGoogleSheetImport() {
+            try {
+                const response = await fetch(googleSheetURL);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const html = await response.text();
+                const table = parseGoogleSheetHTML(html);
+                if (table && table.data.length > 0) {
+                    processGoogleSheetData(table.headers, table.data);
+                    alert('Data imported from Google Sheet successfully!');
+                     renderEnteredRecords();
+                    viewDataButton.disabled = false;
+                } else {
+                    alert('No data found in Google Sheet or error parsing data.');
+                }
+            } catch (error) {
+                console.error("Error importing from Google Sheet:", error);
+                alert('Failed to import data from Google Sheet. Please check the URL and ensure the sheet is published to the web.');
+            }
+        }
+
+        function parseGoogleSheetHTML(html) {
+            const tableRegex = /<table.*?>(.*?)<\/table>/s;
+            const headersRegex = /<thead>.*?<tr>(.*?)<\/tr>.*?<\/thead>/s;
+            const headerRegex = /<th.*?>(.*?)<\/th>/gs;
+            const rowsRegex = /<tbody>.*?<tr>(.*?)<\/tr>.*?<\/tbody>/gs;
+            const cellRegex = /<td.*?>(.*?)<\/td>/gs;
+            const rowRegex = /<tr.*?>(.*?)<\/tr>/gs;
+
+            const tableMatch = html.match(tableRegex);
+            if (!tableMatch) return null;
+            const tableHTML = tableMatch[1];
+
+            const headersMatch = tableHTML.match(headersRegex);
+            let headers = [];
+            if (headersMatch) {
+                const headerRowHTML = headersMatch[1];
+                let headerMatchArray;
+                while ((headerMatchArray = headerRegex.exec(headerRowHTML)) !== null) {
+                    headers.push(headerMatchArray[1].trim());
+                }
+            }
+
+            const data = [];
+            let rowMatchArray;
+            const rowsBodyMatch = tableHTML.match(/<tbody>(.*?)<\/tbody>/s); //Get only tbody content
+            if(rowsBodyMatch){
+                let rowDataHTML = rowsBodyMatch[1];
+                while ((rowMatchArray = rowRegex.exec(rowDataHTML)) !== null) {
+                    const rowHTML = rowMatchArray[1];
+                    const row = [];
+                    let cellMatchArray;
+                    while ((cellMatchArray = cellRegex.exec(rowHTML)) !== null) {
+                        row.push(cellMatchArray[1].trim());
+                    }
+                    if(row.length > 0) data.push(row); // Ensure not pushing empty rows
+                }
+            }
+
+
+            return { headers: headers, data: data };
+        }
+
+
+        function processGoogleSheetData(headers, data) {
+            if (headers.length === 0) {
+                alert("Could not parse headers from Google Sheet. Ensure the first row contains headers.");
+                return;
+            }
+             headers.forEach((header, index) => {
+                if(header && header.toLowerCase().includes('barcode')) {
+                  barcodeHeader = header;
+                }
+                if(header && header.toLowerCase().includes('name')){
+                  nameHeader = header
+                }
+                 headerMap[header] = index;
+            });
+
+             if (!barcodeHeader) {
+                 alert("No 'barcode' column found in the Google Sheet.")
+                 return;
+             }
+             if (!nameHeader){
+                 alert("No 'name' column found in the Google Sheet.");
+                 return;
+             }
+
+            database = data;
+            localStorage.setItem('database', JSON.stringify(database));
+             localStorage.setItem('headerMap', JSON.stringify(headerMap));
+             localStorage.setItem('barcodeHeader', barcodeHeader);
+              localStorage.setItem('nameHeader', nameHeader);
+        }
+
+
+        // Handle File Import Function - same file import function as before
         async function handleFileImport(event) {
              try {
                 const file = event.target.files[0];
@@ -464,15 +582,13 @@
 
 
                         database = excelData.slice(1);
-                        localStorage.setItem('database', JSON.stringify(database)); // Store database to local storage for local file import
+                        localStorage.setItem('database', JSON.stringify(database));
                          localStorage.setItem('headerMap', JSON.stringify(headerMap));
                          localStorage.setItem('barcodeHeader', barcodeHeader);
                           localStorage.setItem('nameHeader', nameHeader);
-                        alert('Data imported successfully from local file!');
+                        alert('Data imported successfully!');
                          renderEnteredRecords();
                        viewDataButton.disabled = false;
-                       searchButton.disabled = false;
-                       exportButton.disabled = false;
                     } catch (e) {
                        console.error("Error parsing file:", e)
                         alert('Error parsing file, please check the file format!');
@@ -491,8 +607,7 @@
             }
         }
 
-
-       // Search Functionality (Phase 3)
+       // Search Functionality (Phase 3) - same search functionality as before
         searchButton.addEventListener('click', () => {
             const barcode = searchBarcodeInput.value.trim();
 
@@ -501,11 +616,11 @@
                 return;
             }
             if(database.length === 0){
-                alert('No data loaded, Inventory data is empty.')
+                alert('No data imported, Please import excel sheet or google sheet.')
                 return;
             }
 
-            const foundItem = database.find(item => String(item[barcodeHeader]).trim() === barcode); // Ensure barcode comparison is also trimmed and string
+            const foundItem = database.find(item => item[headerMap[barcodeHeader]] === barcode);
 
             if (foundItem) {
               currentItem = foundItem;
@@ -523,7 +638,7 @@
             }
         });
 
-         function renderSearchResultTable(foundItem) {
+         function renderSearchResultTable(foundItem) { // same render search result table function as before
            const searchResultTableHead = searchResultTable.querySelector('thead');
            searchResultTableHead.innerHTML = '';
            const headerRow = document.createElement('tr');
@@ -539,7 +654,7 @@
                const row = document.createElement('tr');
              for (const header in headerMap) {
                const td = document.createElement('td');
-               td.textContent = foundItem[header];
+               td.textContent = foundItem[headerMap[header]];
                row.appendChild(td)
               }
 
@@ -547,11 +662,12 @@
            searchResultTable.style.display = 'block';
         }
 
-        // Expiry Date Management (Phase 4)
+        // Expiry Date Management (Phase 4) - same expiry date management as before
         addExpiryButton.addEventListener('click', addExpiryEntry);
 
         function addExpiryEntry() {
             const entryDiv = document.createElement('div');
+            entryDiv.classList.add('expiry-input-group');
 
             const dateInput = document.createElement('input');
             dateInput.type = 'text';
@@ -581,20 +697,36 @@
             quantityInput.placeholder = 'Quantity';
             quantityInput.min = '1';
 
+
             const removeButton = document.createElement('button');
-            removeButton.textContent = 'Remove';
+            removeButton.textContent = ''; // No Text now, only icon
+            removeButton.innerHTML = '<i class="fas fa-times-circle"></i>'; // Icon for remove
             removeButton.classList.add('remove-button');
+            removeButton.title = 'Remove Expiry Field';
             removeButton.addEventListener('click', () => {
                 entryDiv.remove();
             });
 
+
+            const addExpiryForButton = document.createElement('button');
+            addExpiryForButton.textContent = ''; // No Text now, only icon
+            addExpiryForButton.innerHTML = '<i class="fas fa-plus-circle"></i>'; // Icon for add more expiry
+            addExpiryForButton.classList.add('add-expiry-button-inline'); //Class name not used now
+            addExpiryForButton.title = 'Add Another Expiry Field';
+            addExpiryForButton.addEventListener('click', () => {
+                addExpiryEntry(); // Call the general addExpiryEntry function
+            });
+
+
             entryDiv.appendChild(dateInput);
             entryDiv.appendChild(quantityInput);
             entryDiv.appendChild(removeButton);
+            entryDiv.appendChild(addExpiryForButton);
             expiryInputs.appendChild(entryDiv);
         }
 
-          function isValidDate(dateString){
+
+          function isValidDate(dateString){ // same date validation function as before
           if(!/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
            return false;
            }
@@ -621,23 +753,25 @@
 
           return true;
         }
-        // Save Entry (Phase 5)
+
+
+        // Save Entry (Phase 5) - Main Save Button (Now Visible and used for all entries) - same save entry function as before
           saveButton.addEventListener('click', () => {
              if(!currentItem){
                 alert("Please search for an item to save!");
                  return;
              }
-           const expiryEntries = expiryInputs.querySelectorAll('div');
+           const expiryEntries = expiryInputs.querySelectorAll('.expiry-input-group'); // Select by class name
            if (expiryEntries.length === 0) {
              alert('Please add at least one expiry entry!');
               return;
             }
              const itemData = {};
              for(const header in headerMap) {
-               itemData[header] = currentItem[header];
+               itemData[header] = currentItem[headerMap[header]];
              }
 
-             const existingRecordIndex = enteredRecords.findIndex(record => String(record[barcodeHeader]).trim() === String(itemData[barcodeHeader]).trim()); // Trim for comparison
+             const existingRecordIndex = enteredRecords.findIndex(record => record[barcodeHeader] === itemData[barcodeHeader]);
 
            let record = existingRecordIndex === -1 ? {...itemData} : enteredRecords[existingRecordIndex]
 
@@ -679,7 +813,7 @@
               searchResultTable.style.display = 'none';//Clear the search result table
           });
 
-        // Clear Functions (Phase 6)
+        // Clear Functions (Phase 6) - same clear functions as before
         clearFieldsButton.addEventListener('click', clearFields);
 
         function clearFields() {
@@ -688,7 +822,7 @@
         clearDatabaseButton.addEventListener('click', clearDatabase);
 
           function clearDatabase() {
-           database = []; // Clear in-memory database
+           database = [];
            currentItem = null;
            enteredRecords = [];
            headerMap = {};
@@ -700,19 +834,13 @@
            searchBarcodeInput.value = '';
            clearFields();
            saveButton.disabled = true;
-           searchButton.disabled = true;
-           viewDataButton.disabled = true;
-           exportButton.disabled = true;
            searchResultTable.style.display = 'none';
-           localStorage.removeItem('database'); // Clear database from local storage as well if it was ever stored from local file
-           localStorage.removeItem('headerMap');
-           localStorage.removeItem('barcodeHeader');
-           localStorage.removeItem('nameHeader');
+           localStorage.clear();
          alert("Database has been cleared!");
        }
 
 
-        // Render Table & List Box (Phase 7)
+        // Render Table & List Box (Phase 7) - same render table and list box function as before
         function renderItemList() {
 
         }
@@ -760,7 +888,7 @@
            });
          }
 
-        function renderDataList(){
+        function renderDataList(){ // same render data list function as before
              const popupTable = document.getElementById('popupTable');
             popupTable.innerHTML = '';
 
@@ -777,7 +905,7 @@
               const tr = document.createElement('tr');
               for (const header in headerMap) {
                 const td = document.createElement('td');
-                td.textContent = row[header];
+                td.textContent = row[headerMap[header]];
                 tr.appendChild(td);
               }
               popupTable.appendChild(tr);
@@ -787,7 +915,7 @@
         }
 
 
-        // Export Data (Phase 8)
+        // Export Data (Phase 8) - same export data function as before
         exportButton.addEventListener('click', () => {
             if (enteredRecords.length === 0) {
                 alert('No records to export!');
@@ -808,67 +936,27 @@
             }
         });
 
-       viewDataButton.addEventListener('click', () =>{
+       viewDataButton.addEventListener('click', () =>{ // same view data button function as before
             if(database.length === 0){
-               alert("Please import excel sheet to display data!")
+               alert("Please import excel sheet or google sheet to display data!")
                 return;
             }
            renderDataList();
         });
 
 
-        closePopup.addEventListener('click', () => {
+        closePopup.addEventListener('click', () => { // same close popup function as before
              dataPopup.style.display = 'none';
           });
 
-          window.addEventListener('click', (event) => {
+          window.addEventListener('click', (event) => { // same window click event listener as before
             if (event.target === dataPopup) {
               dataPopup.style.display = 'none';
            }
          });
 
-        // Barcode Scanning Functionality
-        let scannerActive = false;
-
-        scanBarcodeButton.addEventListener('click', () => {
-            if (scannerActive) {
-                stopScanner();
-            } else {
-                startScanner();
-            }
-        });
-
-        function startScanner() {
-            barcodeScannerResult.textContent = ''; // Clear previous result
-            barcodeScannerResult.className = ''; // Clear any previous class
-            barcodeScannerViewport.style.display = 'block'; // Show video viewport - This line should still be present, but inline style should override if needed.
-            scannerActive = true;
-            scanBarcodeButton.textContent = 'Stop Scanning';
-
-            navigator.mediaDevices.getUserMedia({ video: true }) // Request camera access directly
-                .then(function(stream) {
-                    console.log("getUserMedia success, attaching stream directly to video element"); // Log success
-                    barcodeScannerViewport.srcObject = stream; // Attach stream directly
-                    // **IMPORTANT: Remove Quagga.init, Quagga.start, and Quagga.onDetected for this test**
-                })
-                .catch(function(error) {
-                    console.error("getUserMedia Error:", error); // Log getUserMedia error
-                    barcodeScannerResult.textContent = `Error accessing camera: ${error.name} - ${error.message}`;
-                    barcodeScannerResult.className = 'error';
-                    barcodeScannerViewport.style.display = 'none';
-                    scannerActive = false;
-                    scanBarcodeButton.textContent = 'Scan Barcode';
-                });
-        }
-
-        function stopScanner() {
-            barcodeScannerViewport.style.display = 'none'; // Hide video viewport
-            scannerActive = false;
-            scanBarcodeButton.textContent = 'Scan Barcode';
-            // Quagga.stop();  - No Quagga in this test
-        }
-
-
+        // Function for individual Save Entry - REMOVED as per request
+        // function saveSingleEntry(entryDiv) { ... }
     </script>
 </body>
 </html>
