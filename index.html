@@ -185,7 +185,7 @@
 
     <div class="container">
         <input type="file" id="fileInput" accept=".xlsx, .xls" style="display:none">
-        <button id="importButton" style="display:none">Import Data</button>  <!-- Hiding Import Button -->
+        <button id="importButton">Import Data</button>  <!--  Import Button is Visible Now -->
         <button id="viewDataButton" disabled>View Imported Data</button>
         <button id="clearDatabaseButton">Clear Database</button>
         </div>
@@ -247,7 +247,7 @@
     <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script> <!-- QuaggaJS Library -->
     <script>
          // Global variables
-        let database = [];
+        let database = []; // Database will be stored in memory now
         let currentItem = null;
         let enteredRecords = [];
         let headerMap = {}; // Map to store column index by header
@@ -297,20 +297,15 @@
 
         // Load data from local storage
         function loadDataFromLocalStorage() {
-             const storedDatabase = localStorage.getItem('database');
-             const storedEnteredRecords = localStorage.getItem('enteredRecords');
-             const storedHeaderMap = localStorage.getItem('headerMap');
-             const storedBarcodeHeader = localStorage.getItem('barcodeHeader');
-            const storedNameHeader = localStorage.getItem('nameHeader');
+             // database = JSON.parse(localStorage.getItem('database')); // DO NOT LOAD DATABASE FROM LOCAL STORAGE ANYMORE
+             enteredRecords = JSON.parse(localStorage.getItem('enteredRecords') || '[]'); // Load enteredRecords (still needed)
+             headerMap = JSON.parse(localStorage.getItem('headerMap') || '{}');
+             barcodeHeader = localStorage.getItem('barcodeHeader') || '';
+             nameHeader = localStorage.getItem('nameHeader') || '';
              let storedCurrentDate = localStorage.getItem('currentDate');
 
 
-            if (storedDatabase) database = JSON.parse(storedDatabase);
-            if (storedEnteredRecords) enteredRecords = JSON.parse(storedEnteredRecords);
-            if (storedHeaderMap) headerMap = JSON.parse(storedHeaderMap);
-            if (storedBarcodeHeader) barcodeHeader = storedBarcodeHeader;
-             if(storedNameHeader) nameHeader = storedNameHeader;
-              if(!storedCurrentDate){
+            if(storedCurrentDate === null){ // Check for null explicitly
                     localStorage.setItem('currentDate', getCurrentDateTime());
                     storedCurrentDate = localStorage.getItem('currentDate')
                  }
@@ -318,7 +313,7 @@
                currentDateDisplay.textContent = `Current Date: ${storedCurrentDate}`;
             renderEnteredRecords();
 
-             if(database.length >0){
+             if(database.length > 0 || localStorage.getItem('database')) { // Check if database is loaded in memory OR was loaded before from file
                 searchButton.disabled = false;
                  viewDataButton.disabled = false;
                  exportButton.disabled = false;
@@ -338,7 +333,7 @@
                     return response.text();
                 })
                 .then(csvText => {
-                    processCSVData(csvText);
+                    processCSVData(csvText, false); // Indicate it's not from local file
                 })
                 .catch(error => {
                     console.error("Error fetching or processing CSV data:", error);
@@ -347,7 +342,7 @@
         }
 
 
-        function processCSVData(csvText) {
+        function processCSVData(csvText, fromLocalFile = false) { // Added fromLocalFile flag
             const lines = csvText.trim().split('\n');
             if (lines.length <= 1) {
                 alert("CSV file is empty or contains only headers.");
@@ -387,13 +382,15 @@
             }
 
 
-            database = csvDatabase;
-            localStorage.setItem('database', JSON.stringify(database));
+            database = csvDatabase; // Store database in memory
+            if (fromLocalFile) {
+                localStorage.setItem('database', JSON.stringify(database)); // Store to local storage ONLY if from local file
+            }
             localStorage.setItem('headerMap', JSON.stringify(headerMap));
             localStorage.setItem('barcodeHeader', barcodeHeader);
             localStorage.setItem('nameHeader', nameHeader);
 
-            alert('Inventory data loaded successfully from online CSV!');
+            alert('Inventory data loaded successfully!');
             renderEnteredRecords();
             viewDataButton.disabled = false;
             searchButton.disabled = false;
@@ -404,6 +401,95 @@
         window.onload = function() {
             loadDataFromCSV(csvDataUrl);
         };
+
+        // Import Functionality (Phase 2) - Keep this for local file import
+        importButton.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', handleFileImport);
+
+        async function handleFileImport(event) {
+             try {
+                const file = event.target.files[0];
+                if (!file) {
+                    alert('No file selected!');
+                    return;
+                }
+
+                 const reader = new FileReader();
+                 reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        let workbook;
+                        try{
+                            workbook = XLSX.read(data, { type: 'array' });
+                        }catch(e){
+                            console.error("Error parsing file:", e)
+                            alert('Error parsing file, please check the file format!');
+                            return;
+                        }
+                        const sheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[sheetName];
+                        const range = XLSX.utils.decode_range(worksheet['!ref']);
+                         if(range.e.r <1){
+                            alert("File contains no data!")
+                            return;
+                        }
+                        const excelData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                        if (!excelData || excelData.length === 0) {
+                            alert('File is empty or unreadable!');
+                            return;
+                        }
+
+                        const headers = excelData[0];
+                        headers.forEach((header, index) => {
+                            if(header && header.toLowerCase().includes('barcode')) {
+                              barcodeHeader = header;
+                            }
+                            if(header && header.toLowerCase().includes('name')){
+                              nameHeader = header
+                            }
+                             headerMap[header] = index;
+                        });
+
+                         if (!barcodeHeader) {
+                             alert("No 'barcode' column found in the file.")
+                             return;
+                         }
+                         if (!nameHeader){
+                             alert("No 'name' column found in the file.");
+                             return;
+                         }
+
+
+                        database = excelData.slice(1);
+                        localStorage.setItem('database', JSON.stringify(database)); // Store database to local storage for local file import
+                         localStorage.setItem('headerMap', JSON.stringify(headerMap));
+                         localStorage.setItem('barcodeHeader', barcodeHeader);
+                          localStorage.setItem('nameHeader', nameHeader);
+                        alert('Data imported successfully from local file!');
+                         renderEnteredRecords();
+                       viewDataButton.disabled = false;
+                       searchButton.disabled = false;
+                       exportButton.disabled = false;
+                    } catch (e) {
+                       console.error("Error parsing file:", e)
+                        alert('Error parsing file, please check the file format!');
+                    }
+                 };
+
+                 reader.onerror = (e) =>{
+                     console.error("Error reading file:", e)
+                        alert('Error reading file, please check the file format!');
+                };
+
+                 reader.readAsArrayBuffer(file);
+            } catch (error) {
+                console.error("Error during import:", error);
+                alert('An unexpected error occurred during file import.');
+            }
+        }
 
 
        // Search Functionality (Phase 3)
@@ -602,7 +688,7 @@
         clearDatabaseButton.addEventListener('click', clearDatabase);
 
           function clearDatabase() {
-           database = [];
+           database = []; // Clear in-memory database
            currentItem = null;
            enteredRecords = [];
            headerMap = {};
@@ -618,7 +704,10 @@
            viewDataButton.disabled = true;
            exportButton.disabled = true;
            searchResultTable.style.display = 'none';
-           localStorage.clear();
+           localStorage.removeItem('database'); // Clear database from local storage as well if it was ever stored from local file
+           localStorage.removeItem('headerMap');
+           localStorage.removeItem('barcodeHeader');
+           localStorage.removeItem('nameHeader');
          alert("Database has been cleared!");
        }
 
