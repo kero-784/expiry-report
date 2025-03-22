@@ -426,8 +426,11 @@
 
 
         async function fetchDataFromGoogleSheet(url) {
+            const corsProxyUrl = 'https://corsproxy.io/?'; // Or another public CORS proxy URL
+            const proxiedUrl = corsProxyUrl + url; // Combine proxy URL with your Google Sheet URL
+
             try {
-                const response = await fetch(url);
+                const response = await fetch(proxiedUrl); // Fetch through the CORS proxy
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -444,7 +447,7 @@
                 }
             } catch (error) {
                 console.error("Error importing from Google Sheet:", error);
-                alert('Failed to import data from Google Sheet. Please check the URL and ensure the sheet is published to the web as CSV.');
+                alert('Failed to import data from Google Sheet. Please check the URL and ensure the sheet is published to the web as CSV. (CORS issue likely bypassed by proxy)');
                 loadDataFromLocalStorage(); // Fallback to local storage if Google Sheet load fails
             }
         }
