@@ -347,11 +347,14 @@
         let database = [];
         let currentItem = null;
         let enteredRecords = [];
-        let headerMap = {}; // Map to store column index by header
+        let headerMap = {};
         let barcodeHeader = '';
         let nameHeader = '';
         let expiryHeaderCount = 0;
-        const googleSheetCSVURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSu5ckbWJ7J6joJetQ-oD1B49mhxKcrQiDpZeOgZeUQzaczHKujgxbIbJghNQr1QA/pub?output=csv"; // Google Sheet CSV URL - UPDATED LINK
+        const googleSheetCSVURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTAxhP_rdJ4DjetuN1vfWZOrmvmlJViBYDWz0KtMql6Hle4EJW2n6Ce7v0zKiJZFQ/pub?output=csv"; // UPDATED GOOGLE SHEET URL!
+        const dbName = "inventoryDB";
+        const dbStoreName = "inventoryStore";
+
 
         // Get HTML elements - same get elements as before
         const fileInput = document.getElementById('fileInput');
@@ -374,7 +377,7 @@
           const currentDateDisplay = document.getElementById('currentDateDisplay');
         const closePopup = document.querySelector('.closePopup');
 
-          function getCurrentDateTime(){ // same date function as before
+          function getCurrentDateTime(){
               const now = new Date();
             const day = String(now.getDate()).padStart(2, '0');
             const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -387,19 +390,14 @@
           }
 
 
-        // Load data from local storage - same local storage function as before, adjusted to call after google sheet load attempt
-        function loadDataFromLocalStorage() {
-             const storedDatabase = localStorage.getItem('database');
+        async function loadDataFromLocalStorage() {
              const storedEnteredRecords = localStorage.getItem('enteredRecords');
-             const storedHeaderMap = localStorage.getItem('headerMap');
              const storedBarcodeHeader = localStorage.getItem('barcodeHeader');
             const storedNameHeader = localStorage.getItem('nameHeader');
              let storedCurrentDate = localStorage.getItem('currentDate');
 
 
-            if (storedDatabase) database = JSON.parse(storedDatabase);
             if (storedEnteredRecords) enteredRecords = JSON.parse(storedEnteredRecords);
-            if (storedHeaderMap) headerMap = JSON.parse(storedHeaderMap);
             if (storedBarcodeHeader) barcodeHeader = storedBarcodeHeader;
              if(storedNameHeader) nameHeader = storedNameHeader;
               if(!storedCurrentDate){
@@ -410,14 +408,102 @@
                currentDateDisplay.textContent = `Current Date: ${storedCurrentDate}`;
             renderEnteredRecords();
 
-             if(database.length >0){
-                searchButton.disabled = false;
-                 viewDataButton.disabled = false;
+             try {
+                const db = await openDatabase();
+                const storedHeaderMap = await getDataFromIndexedDB(db, 'headerMap');
+                database = await getAllDataFromIndexedDB(db, dbStoreName);
+
+                if (storedHeaderMap) headerMap = storedHeaderMap;
+
+                 if(database.length > 0){
+                    searchButton.disabled = false;
+                     viewDataButton.disabled = false;
+                 }
+                db.close();
+
+             } catch (error) {
+                 console.error("Error loading data from IndexedDB:", error);
+                 alert("Error loading data from database!");
              }
          }
 
 
-        // Import Functionality (Phase 2) - Import from File button event listener - same as before
+         function openDatabase() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(dbName, 1);
+
+                request.onerror = (event) => {
+                    reject("Database failed to open");
+                };
+
+                request.onsuccess = (event) => {
+                    resolve(event.target.result);
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(dbStoreName)) {
+                        db.createObjectStore(dbStoreName); // No key options specified, DB will auto-generate keys
+                    }
+                    if (!db.objectStoreNames.contains('headerMapStore')) {
+                        db.createObjectStore('headerMapStore'); // No key options for headerMapStore either
+                    }
+                };
+            });
+         }
+
+
+         async function storeDatatoIndexedDB(db, storeName, data) { // keyName parameter removed!
+            return new Promise((resolve, reject) =>{
+                const transaction = db.transaction(storeName, 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.add(data); // Use store.add() to let DB auto-generate key
+
+                request.onsuccess = () => {
+                    resolve();
+                };
+
+                request.onerror = (event) =>{
+                    reject("Data failed to store in IndexedDB");
+                };
+            });
+         }
+
+
+         async function getDataFromIndexedDB(db, keyName, storeName = 'headerMapStore') {
+             return new Promise((resolve, reject) =>{
+                const transaction = db.transaction(storeName, 'readonly');
+                const store = transaction.objectStore(storeName);
+                const request = store.get(keyName);
+
+                request.onerror = (event) =>{
+                    reject("Error retrieving data from IndexedDB");
+                };
+
+                request.onsuccess = (event) =>{
+                    resolve(event.target.result);
+                };
+             });
+         }
+
+         async function getAllDataFromIndexedDB(db, storeName) {
+             return new Promise((resolve, reject) =>{
+                 const transaction = db.transaction(storeName, 'readonly');
+                 const store = transaction.objectStore(storeName);
+                 const request = store.getAll();
+
+                 request.onerror = (event) =>{
+                     reject("Error retrieving all data from IndexedDB");
+                 };
+
+                 request.onsuccess = (event) =>{
+                     resolve(event.target.result);
+                 };
+             });
+         }
+
+
+        // Import Functionality (Phase 2)
         importButton.addEventListener('click', () => {
             fileInput.click();
         });
@@ -426,29 +512,29 @@
 
 
         async function fetchDataFromGoogleSheet(url) {
-            const corsProxyUrl = 'https://corsproxy.io/?'; // Or another public CORS proxy URL
-            const proxiedUrl = corsProxyUrl + url; // Combine proxy URL with your Google Sheet URL
+            const corsProxyUrl = 'https://corsproxy.io/?';
+            const proxiedUrl = corsProxyUrl + url;
 
             try {
-                const response = await fetch(proxiedUrl); // Fetch through the CORS proxy
+                const response = await fetch(proxiedUrl);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const csvText = await response.text();
                 const parsedData = parseCSV(csvText);
                 if (parsedData && parsedData.data.length > 0) {
-                    processGoogleSheetCSVData(parsedData.headers, parsedData.data);
+                    await processGoogleSheetCSVData(parsedData.headers, parsedData.data);
                     alert('Data imported from Google Sheet successfully!');
                      renderEnteredRecords();
                     viewDataButton.disabled = false;
                 } else {
                     alert('No data found in Google Sheet or error parsing data.');
-                     loadDataFromLocalStorage(); // Load from local storage if google sheet fails
+                     loadDataFromLocalStorage();
                 }
             } catch (error) {
                 console.error("Error importing from Google Sheet:", error);
                 alert('Failed to import data from Google Sheet. Please check the URL and ensure the sheet is published to the web as CSV. (CORS issue likely bypassed by proxy)');
-                loadDataFromLocalStorage(); // Fallback to local storage if Google Sheet load fails
+                loadDataFromLocalStorage();
             }
         }
 
@@ -461,7 +547,7 @@
 
             for (let i = 1; i < lines.length; i++) {
                 const row = lines[i].split(',').map(cell => cell.trim());
-                if(row.length > 0 && row[0] !== ""){ // Ensure not pushing empty rows and not process empty first row
+                if(row.length > 0 && row[0] !== ""){
                    data.push(row);
                  }
             }
@@ -470,7 +556,7 @@
         }
 
 
-        function processGoogleSheetCSVData(headers, data) {
+        async function processGoogleSheetCSVData(headers, data) {
              if (headers.length === 0) {
                 alert("Could not parse headers from Google Sheet CSV. Ensure the first row contains headers.");
                 return;
@@ -496,14 +582,22 @@
              }
 
             database = data;
-            localStorage.setItem('database', JSON.stringify(database));
-             localStorage.setItem('headerMap', JSON.stringify(headerMap));
-             localStorage.setItem('barcodeHeader', barcodeHeader);
-              localStorage.setItem('nameHeader', nameHeader);
+
+            try {
+                const db = await openDatabase();
+                await storeDatatoIndexedDB(db, dbStoreName, database); // Store database, auto-key
+                await storeDatatoIndexedDB(db, 'headerMapStore', headerMap); // Store headerMap, auto-key
+                localStorage.setItem('barcodeHeader', barcodeHeader);
+                localStorage.setItem('nameHeader', nameHeader);
+
+                db.close();
+            } catch (error) {
+                console.error("Error storing data to IndexedDB:", error);
+                 alert('Error storing data to database!');
+            }
         }
 
 
-        // Handle File Import Function - same file import function as before
         async function handleFileImport(event) {
              try {
                 const file = event.target.files[0];
@@ -513,7 +607,7 @@
                 }
 
                  const reader = new FileReader();
-                 reader.onload = (e) => {
+                 reader.onload = async (e) => {
                     try {
                         const data = new Uint8Array(e.target.result);
                         let workbook;
@@ -559,13 +653,25 @@
 
 
                         database = excelData.slice(1);
-                        localStorage.setItem('database', JSON.stringify(database));
-                         localStorage.setItem('headerMap', JSON.stringify(headerMap));
-                         localStorage.setItem('barcodeHeader', barcodeHeader);
-                          localStorage.setItem('nameHeader', nameHeader);
-                        alert('Data imported successfully!');
-                         renderEnteredRecords();
-                       viewDataButton.disabled = false;
+
+                         try {
+                            const db = await openDatabase();
+                            await storeDatatoIndexedDB(db, dbStoreName, database); // Store database, auto-key
+                            await storeDatatoIndexedDB(db, 'headerMapStore', headerMap); // Store headerMap, auto-key
+                             localStorage.setItem('barcodeHeader', barcodeHeader);
+                             localStorage.setItem('nameHeader', nameHeader);
+
+                            db.close();
+                            alert('Data imported successfully!');
+                            renderEnteredRecords();
+                            viewDataButton.disabled = false;
+
+                         } catch (dbError) {
+                            console.error("Error storing data to IndexedDB:", dbError);
+                            alert('Error storing data to database!');
+                         }
+
+
                     } catch (e) {
                        console.error("Error parsing file:", e)
                         alert('Error parsing file, please check the file format!');
@@ -798,7 +904,7 @@
         }
         clearDatabaseButton.addEventListener('click', clearDatabase);
 
-          function clearDatabase() {
+          async function clearDatabase() {
            database = [];
            currentItem = null;
            enteredRecords = [];
@@ -812,9 +918,24 @@
            clearFields();
            saveButton.disabled = true;
            searchResultTable.style.display = 'none';
-           localStorage.clear();
-         alert("Database has been cleared!");
-       }
+           localStorage.removeItem('enteredRecords');
+           localStorage.removeItem('barcodeHeader');
+           localStorage.removeItem('nameHeader');
+
+
+           try {
+               const db = await openDatabase();
+               const transaction = db.transaction([dbStoreName, 'headerMapStore'], 'readwrite');
+               transaction.objectStore(dbStoreName).clear();
+               transaction.objectStore('headerMapStore').clear();
+               db.close();
+               alert("Database has been cleared!");
+
+           } catch (error) {
+               console.error("Error clearing IndexedDB:", error);
+               alert("Error clearing database!");
+           }
+         }
 
 
         // Render Table & List Box (Phase 7) - same render table and list box function as before
@@ -865,7 +986,7 @@
            });
          }
 
-        function renderDataList(){ // same render data list function as before
+        async function renderDataList(){ // Modified to load data from IndexedDB
              const popupTable = document.getElementById('popupTable');
             popupTable.innerHTML = '';
 
@@ -878,15 +999,26 @@
             });
             popupTable.appendChild(headerRow);
 
-            database.forEach(row => {
-              const tr = document.createElement('tr');
-              for (const header in headerMap) {
-                const td = document.createElement('td');
-                td.textContent = row[headerMap[header]];
-                tr.appendChild(td);
-              }
-              popupTable.appendChild(tr);
-            });
+             try {
+                const db = await openDatabase();
+                const currentDatabase = await getAllDataFromIndexedDB(db, dbStoreName);
+                db.close();
+                currentDatabase.forEach(row => {
+                  const tr = document.createElement('tr');
+                  for (const header in headerMap) {
+                    const td = document.createElement('td');
+                    td.textContent = row[headerMap[header]];
+                    tr.appendChild(td);
+                  }
+                  popupTable.appendChild(tr);
+                });
+
+
+            } catch (error) {
+                console.error("Error loading data from IndexedDB for popup:", error);
+                 alert('Error loading data from database to view!');
+            }
+
 
             dataPopup.style.display = 'flex';
         }
@@ -932,14 +1064,13 @@
            }
          });
 
-        // Function for individual Save Entry - REMOVED as per request
-        // function saveSingleEntry(entryDiv) { ... }
 
-        function init() {
-            fetchDataFromGoogleSheet(googleSheetCSVURL); // Attempt to load from Google Sheet CSV immediately
+        async function init() {
+            await fetchDataFromGoogleSheet(googleSheetCSVURL);
+            await loadDataFromLocalStorage();
         }
 
-        init(); // Call init function when page loads
+        init();
     </script>
 </body>
 </html>
