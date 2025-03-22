@@ -238,7 +238,7 @@
 
     <div id="dataPopup" style="display:none">
         <div id="dataPopupContent">
-         <span class="closePopup">&times;</span>
+         <span class="closePopup">×</span>
          <table id="popupTable"></table>
         </div>
     </div>
@@ -851,7 +851,7 @@
                     type: "LiveStream",
                     target: barcodeScannerViewport,    // Or '#yourElement' (optional)
                     constraints: {
-                        facingMode: "environment"  // or "user" for front camera
+                        facingMode: "environment"  // Use back camera - Changed back to "environment"
                     }
                 },
                 decoder: {
@@ -861,7 +861,7 @@
 
             }, function(err) {
                 if (err) {
-                    console.error(err);
+                    console.error("QuaggaJS Init Error:", err); // More detailed error log
                     barcodeScannerResult.textContent = `Error starting scanner: ${err.message || 'Check console for details'}`;
                     barcodeScannerResult.className = 'error';
                     barcodeScannerViewport.style.display = 'none'; // Hide video on error
@@ -869,10 +869,12 @@
                     scanBarcodeButton.textContent = 'Scan Barcode';
                     return;
                 }
+                console.log("QuaggaJS Initialized Successfully"); // Log success
                 Quagga.start();
             });
 
             Quagga.onDetected(function(result) {
+                console.log("Barcode Detected!", result); // Check if detection happens
                 if (result && result.codeResult && result.codeResult.code) {
                     const barcode = result.codeResult.code;
                     stopScanner();
