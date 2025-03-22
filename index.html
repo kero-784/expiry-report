@@ -6,7 +6,7 @@
     <title>Inventory Manager</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
-        /* Modern Trendy Styles -  same styles as before */
+        /* Modern Trendy Styles - same styles as before */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 20px;
@@ -351,9 +351,9 @@
         let barcodeHeader = '';
         let nameHeader = '';
         let expiryHeaderCount = 0;
-        const googleSheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQtbz-092e1J7qCWIgvdtFP5ayLsLU-FIe8QMBfJLmiZAZuQ82bAb2_-9v1WgR26w/pubhtml"; // Google Sheet URL
+        const googleSheetCSVURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQtbz-092e1J7qCWIgvdtFP5ayLsLU-FIe8QMBfJLmiZAZuQ82bAb2_-9v1WgR26w/pub?gid=1035034915&single=true&output=csv"; // Google Sheet CSV URL
 
-        // Get HTML elements - same get elements as before, added google sheet button
+        // Get HTML elements - same get elements as before
         const fileInput = document.getElementById('fileInput');
         const importButton = document.getElementById('importButton');
         const importGoogleSheetButton = document.getElementById('importGoogleSheetButton');
@@ -387,7 +387,7 @@
           }
 
 
-        // Load data from local storage - same local storage function as before
+        // Load data from local storage - same local storage function as before, adjusted to call after google sheet load attempt
         function loadDataFromLocalStorage() {
              const storedDatabase = localStorage.getItem('database');
              const storedEnteredRecords = localStorage.getItem('enteredRecords');
@@ -416,8 +416,6 @@
              }
          }
 
-        loadDataFromLocalStorage();
-
 
         // Import Functionality (Phase 2) - Import from File button event listener - same as before
         importButton.addEventListener('click', () => {
@@ -426,79 +424,55 @@
 
         fileInput.addEventListener('change', handleFileImport);
 
-        // Import from Google Sheet Button functionality
-        importGoogleSheetButton.addEventListener('click', handleGoogleSheetImport);
 
-        async function handleGoogleSheetImport() {
+        async function fetchDataFromGoogleSheet(url) {
             try {
-                const response = await fetch(googleSheetURL);
+                const response = await fetch(url);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                const html = await response.text();
-                const table = parseGoogleSheetHTML(html);
-                if (table && table.data.length > 0) {
-                    processGoogleSheetData(table.headers, table.data);
+                const csvText = await response.text();
+                const parsedData = parseCSV(csvText);
+                if (parsedData && parsedData.data.length > 0) {
+                    processGoogleSheetCSVData(parsedData.headers, parsedData.data);
                     alert('Data imported from Google Sheet successfully!');
                      renderEnteredRecords();
                     viewDataButton.disabled = false;
                 } else {
                     alert('No data found in Google Sheet or error parsing data.');
+                     loadDataFromLocalStorage(); // Load from local storage if google sheet fails
                 }
             } catch (error) {
                 console.error("Error importing from Google Sheet:", error);
-                alert('Failed to import data from Google Sheet. Please check the URL and ensure the sheet is published to the web.');
+                alert('Failed to import data from Google Sheet. Please check the URL and ensure the sheet is published to the web as CSV.');
+                loadDataFromLocalStorage(); // Fallback to local storage if Google Sheet load fails
             }
         }
 
-        function parseGoogleSheetHTML(html) {
-            const tableRegex = /<table.*?>(.*?)<\/table>/s;
-            const headersRegex = /<thead>.*?<tr>(.*?)<\/tr>.*?<\/thead>/s;
-            const headerRegex = /<th.*?>(.*?)<\/th>/gs;
-            const rowsRegex = /<tbody>.*?<tr>(.*?)<\/tr>.*?<\/tbody>/gs;
-            const cellRegex = /<td.*?>(.*?)<\/td>/gs;
-            const rowRegex = /<tr.*?>(.*?)<\/tr>/gs;
+        function parseCSV(csvText) {
+            const lines = csvText.trim().split('\n');
+            if (lines.length < 1) return { headers: [], data: [] };
 
-            const tableMatch = html.match(tableRegex);
-            if (!tableMatch) return null;
-            const tableHTML = tableMatch[1];
-
-            const headersMatch = tableHTML.match(headersRegex);
-            let headers = [];
-            if (headersMatch) {
-                const headerRowHTML = headersMatch[1];
-                let headerMatchArray;
-                while ((headerMatchArray = headerRegex.exec(headerRowHTML)) !== null) {
-                    headers.push(headerMatchArray[1].trim());
-                }
-            }
-
+            const headers = lines[0].split(',').map(header => header.trim());
             const data = [];
-            let rowMatchArray;
-            const rowsBodyMatch = tableHTML.match(/<tbody>(.*?)<\/tbody>/s); //Get only tbody content
-            if(rowsBodyMatch){
-                let rowDataHTML = rowsBodyMatch[1];
-                while ((rowMatchArray = rowRegex.exec(rowDataHTML)) !== null) {
-                    const rowHTML = rowMatchArray[1];
-                    const row = [];
-                    let cellMatchArray;
-                    while ((cellMatchArray = cellRegex.exec(rowHTML)) !== null) {
-                        row.push(cellMatchArray[1].trim());
-                    }
-                    if(row.length > 0) data.push(row); // Ensure not pushing empty rows
-                }
-            }
 
+            for (let i = 1; i < lines.length; i++) {
+                const row = lines[i].split(',').map(cell => cell.trim());
+                if(row.length > 0 && row[0] !== ""){ // Ensure not pushing empty rows and not process empty first row
+                   data.push(row);
+                 }
+            }
 
             return { headers: headers, data: data };
         }
 
 
-        function processGoogleSheetData(headers, data) {
-            if (headers.length === 0) {
-                alert("Could not parse headers from Google Sheet. Ensure the first row contains headers.");
+        function processGoogleSheetCSVData(headers, data) {
+             if (headers.length === 0) {
+                alert("Could not parse headers from Google Sheet CSV. Ensure the first row contains headers.");
                 return;
             }
+
              headers.forEach((header, index) => {
                 if(header && header.toLowerCase().includes('barcode')) {
                   barcodeHeader = header;
@@ -510,11 +484,11 @@
             });
 
              if (!barcodeHeader) {
-                 alert("No 'barcode' column found in the Google Sheet.")
+                 alert("No 'barcode' column found in the Google Sheet CSV.")
                  return;
              }
              if (!nameHeader){
-                 alert("No 'name' column found in the Google Sheet.");
+                 alert("No 'name' column found in the Google Sheet CSV.");
                  return;
              }
 
@@ -957,6 +931,12 @@
 
         // Function for individual Save Entry - REMOVED as per request
         // function saveSingleEntry(entryDiv) { ... }
+
+        function init() {
+            fetchDataFromGoogleSheet(googleSheetCSVURL); // Attempt to load from Google Sheet CSV immediately
+        }
+
+        init(); // Call init function when page loads
     </script>
 </body>
 </html>
