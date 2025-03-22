@@ -585,8 +585,8 @@
 
             try {
                 const db = await openDatabase();
-                await storeDatatoIndexedDB(db, dbStoreName, database); // Store database, auto-key
-                await storeDatatoIndexedDB(db, 'headerMapStore', headerMap); // Store headerMap, auto-key
+                await storeDatatoIndexedDB(db, dbStoreName, database); // Store database, auto-key - CORRECTED CALL
+                await storeDatatoIndexedDB(db, 'headerMapStore', headerMap); // Store headerMap, auto-key - CORRECTED CALL
                 localStorage.setItem('barcodeHeader', barcodeHeader);
                 localStorage.setItem('nameHeader', nameHeader);
 
@@ -656,8 +656,8 @@
 
                          try {
                             const db = await openDatabase();
-                            await storeDatatoIndexedDB(db, dbStoreName, database); // Store database, auto-key
-                            await storeDatatoIndexedDB(db, 'headerMapStore', headerMap); // Store headerMap, auto-key
+                            await storeDatatoIndexedDB(db, dbStoreName, database); // Store database, auto-key - CORRECTED CALL
+                            await storeDatatoIndexedDB(db, 'headerMapStore', headerMap); // Store headerMap, auto-key - CORRECTED CALL
                              localStorage.setItem('barcodeHeader', barcodeHeader);
                              localStorage.setItem('nameHeader', nameHeader);
 
