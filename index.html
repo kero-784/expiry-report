@@ -163,7 +163,7 @@
             height: 200px; /* Adjust as needed */
             display: none; /* Hidden by default */
             margin: 10px auto;
-            border: 1px solid #ccc;
+            border: 1px solid #ccc; /* Default border - will be overridden by inline style during debugging if needed */
         }
         #barcodeScannerResult {
             margin-top: 10px;
@@ -197,7 +197,7 @@
     </div>
 
     <div id="barcodeScannerContainer"> <!-- Container for Scanner Elements -->
-        <video id="barcodeScannerViewport"></video> <!-- Video element for camera view -->
+        <video id="barcodeScannerViewport" style="width: 300px; height: 200px; border: 2px solid red; display: block !important;"></video> <!-- Video element for camera view -->
         <div id="barcodeScannerResult"></div> <!-- Display scanned barcode result -->
     </div>
 
@@ -841,7 +841,7 @@
         function startScanner() {
             barcodeScannerResult.textContent = ''; // Clear previous result
             barcodeScannerResult.className = ''; // Clear any previous class
-            barcodeScannerViewport.style.display = 'block'; // Show video viewport
+            barcodeScannerViewport.style.display = 'block'; // Show video viewport - This line should still be present, but inline style should override if needed.
             scannerActive = true;
             scanBarcodeButton.textContent = 'Stop Scanning';
 
@@ -851,7 +851,7 @@
                     type: "LiveStream",
                     target: barcodeScannerViewport,    // Or '#yourElement' (optional)
                     constraints: {
-                        facingMode: "environment"  // Use back camera - Changed back to "environment"
+                        facingMode: "environment"  // Use back camera
                     }
                 },
                 decoder: {
