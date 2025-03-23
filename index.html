@@ -255,26 +255,8 @@
             }
         }
     </style>
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <!-- No Firebase SDKs anymore -->
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
-    <script>
-         // Firebase configuration - **REPLACE WITH YOUR COPIED CONFIGURATION BELOW**
-        const firebaseConfig = {
-          apiKey: "AIzaSyBLI0E-Yd0VOgsNivFRyJRFnj6UbmCd3Sk",
-  authDomain: "expiry-database-a408b.firebaseapp.com",
-  projectId: "expiry-database-a408b",
-  storageBucket: "expiry-database-a408b.firebasestorage.app",
-  messagingSenderId: "100402334444",
-  appId: "1:100402334444:web:5514ec03fee601669a73c9",
-  measurementId: "G-RCFBY8TDX2"
-        };
-
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const databaseFirebase = firebase.database(); // Get a reference to the database
-    </script>
 </head>
 <body>
     <div id="currentDateDisplay"></div>
@@ -284,7 +266,7 @@
         <input type="file" id="fileInput" accept=".xlsx, .xls" style="display:none">
         <button id="importButton">Import Data</button>
         <button id="viewDataButton">View Imported Data</button>
-        <button id="clearDatabaseButton">Clear Database</button>
+        <button id="clearDatabaseButton">Clear Data</button> <!-- Changed button text -->
         </div>
         <br/>
     <div class="container">
@@ -307,21 +289,16 @@
 
     <div class="container">
         <button id="addExpiryButton">Add Expiry</button>
-        <button id="saveButton" disabled>Save Entry</button>
+        <button id="saveButton" disabled>Save Entry</button> <!-- Keep Save button for local use -->
         <button id="clearFieldsButton">Clear Fields</button>
     </div>
 
 
     <br/>
 
-    <table id="recordTable">
-        <thead>
 
-        </thead>
-        <tbody id="recordTableBody">
-            <!-- Entered records will be displayed here -->
-        </tbody>
-    </table>
+    <!-- Removed recordTable and recordTableBody -->
+
 
     <div class="container">
      <button id="exportButton">Export Data</button>
@@ -329,7 +306,7 @@
 
     <div id="dataPopup" style="display:none">
         <div id="dataPopupContent">
-         <span class="closePopup">×</span>
+         <span class="closePopup">&times;</span>
          <table id="popupTable"></table>
         </div>
     </div>
@@ -338,12 +315,11 @@
          // Global variables
         let database = [];
         let currentItem = null;
-        let enteredRecords = [];
         let headerMap = {}; // Map to store column index by header
         let barcodeHeader = '';
         let nameHeader = '';
         let expiryHeaderCount = 0;
-
+        let enteredRecords = []; // Keep enteredRecords for local export
 
         // Get HTML elements
         const fileInput = document.getElementById('fileInput');
@@ -356,7 +332,6 @@
         const addExpiryButton = document.getElementById('addExpiryButton');
         const saveButton = document.getElementById('saveButton');
         const clearFieldsButton = document.getElementById('clearFieldsButton');
-        const recordTableBody = document.getElementById('recordTableBody');
         const exportButton = document.getElementById('exportButton');
          const viewDataButton = document.getElementById('viewDataButton');
         const clearDatabaseButton = document.getElementById('clearDatabaseButton');
@@ -378,10 +353,9 @@
           }
 
 
-        // Load data from local storage
+        // Load data from local storage (only for database and headers now)
         function loadDataFromLocalStorage() {
-            loadDataFromFirebase(); // Try to load from Firebase first
-            loadEnteredRecordsFromFirebase(); // Load entered records from Firebase
+            loadFromLocalStorageOnly();
 
             const storedCurrentDate = localStorage.getItem('currentDate');
 
@@ -391,7 +365,6 @@
             }
 
             currentDateDisplay.textContent = `Current Date: ${storedCurrentDate}`;
-            renderEnteredRecords();
 
             if (database.length > 0) {
                 searchButton.disabled = false;
@@ -399,36 +372,6 @@
             }
         }
 
-        async function loadDataFromFirebase() {
-            try {
-                const snapshot = await databaseFirebase.ref('inventoryData').get(); // Get data from Firebase
-                if (snapshot.exists()) {
-                    const firebaseData = snapshot.val();
-                    database = firebaseData.database || [];
-                    headerMap = firebaseData.headerMap || {};
-                    barcodeHeader = firebaseData.barcodeHeader || '';
-                    nameHeader = firebaseData.nameHeader || '';
-
-                    localStorage.setItem('database', JSON.stringify(database)); // Update local storage too
-                    localStorage.setItem('headerMap', JSON.stringify(headerMap));
-                    localStorage.setItem('barcodeHeader', JSON.stringify(barcodeHeader));
-                    localStorage.setItem('nameHeader', JSON.stringify(nameHeader));
-
-                    console.log("Data loaded from Firebase successfully!");
-                    if (database.length > 0) {
-                        searchButton.disabled = false;
-                        viewDataButton.disabled = false;
-                    }
-                } else {
-                    console.log("No data found in Firebase, loading from local storage if available.");
-                    loadFromLocalStorageOnly(); // Fallback to local storage if Firebase is empty
-                }
-            } catch (error) {
-                console.error("Error loading data from Firebase:", error);
-                console.log("Failed to load from Firebase, loading from local storage if available.");
-                loadFromLocalStorageOnly(); // Fallback to local storage on Firebase error
-            }
-        }
 
         function loadFromLocalStorageOnly() { // Helper function for local storage fallback
             const storedDatabase = localStorage.getItem('database');
@@ -447,31 +390,6 @@
             }
         }
 
-        async function loadEnteredRecordsFromFirebase() {
-            try {
-                const snapshot = await databaseFirebase.ref('enteredRecords').get();
-                if (snapshot.exists()) {
-                    enteredRecords = snapshot.val() || [];
-                    localStorage.setItem('enteredRecords', JSON.stringify(enteredRecords)); // Update local storage
-                    renderEnteredRecords(); // Re-render the table
-                    console.log("Entered records loaded from Firebase.");
-                } else {
-                    console.log("No entered records found in Firebase, loading from local storage if available.");
-                    loadEnteredRecordsFromLocalStorageOnly(); // Fallback for entered records
-                }
-            } catch (error) {
-                console.error("Error loading entered records from Firebase:", error);
-                console.log("Failed to load entered records from Firebase, loading from local storage if available.");
-                loadEnteredRecordsFromLocalStorageOnly(); // Fallback on error
-            }
-        }
-
-        function loadEnteredRecordsFromLocalStorageOnly() { // Fallback for entered records local storage
-            const storedEnteredRecords = localStorage.getItem('enteredRecords');
-            if (storedEnteredRecords) enteredRecords = JSON.parse(storedEnteredRecords);
-            renderEnteredRecords(); // Ensure table is rendered even if loading from local storage
-        }
-
 
         loadDataFromLocalStorage();
 
@@ -481,7 +399,7 @@
 
         async function fetchDataFromWebsite() {
             // **REPLACE WITH YOUR ACTUAL GITHUB PAGES EXCEL FILE URL HERE:**
-            const excelFileURL = 'https://kero-784.github.io/expiry-report//inventory_data.xlsx';
+            const excelFileURL = 'https://github.com/kero-784/expiry-report/blob/main/inventory_data.xlsx?raw=true'; // Use raw=true for direct file access from GitHub
 
             try {
                 const response = await fetch(excelFileURL);
@@ -539,27 +457,16 @@
 
                     database = excelData.slice(1);
 
-                    // **Firebase Upload Logic:**
-                    try {
-                        await databaseFirebase.ref('inventoryData').set({ // 'inventoryData' is the path in your Firebase database
-                            database: database,
-                            headerMap: tempHeaderMap,
-                            barcodeHeader: tempBarcodeHeader,
-                            nameHeader: tempNameHeader
-                        });
-                        alert('Data loaded from website and uploaded to Firebase successfully!');
-                    } catch (firebaseError) {
-                        console.error("Firebase upload error:", firebaseError);
-                        alert('Data loaded from website successfully but failed to upload to Firebase. Check console for errors.');
-                    }
 
                     localStorage.setItem('database', JSON.stringify(database));
                     localStorage.setItem('headerMap', JSON.stringify(tempHeaderMap));
                     localStorage.setItem('barcodeHeader', tempBarcodeHeader);
                     localStorage.setItem('nameHeader', tempNameHeader);
 
-                    renderEnteredRecords();
                     viewDataButton.disabled = false;
+                    searchButton.disabled = false; // Enable search after data load
+                    alert('Data loaded from website successfully!');
+
 
                 } catch (e) {
                    console.error("Error parsing file:", e)
@@ -578,7 +485,7 @@
                 return;
             }
             if(database.length === 0){
-                alert('No data imported, Please import excel sheet.')
+                alert('No data imported, Please import data first.')
                 return;
             }
 
@@ -698,8 +605,8 @@
 
           return true;
         }
-        // Save Entry (Phase 5) - No changes needed
-          saveButton.addEventListener('click', async () => { // Make event listener async
+        // Save Entry (Phase 5) - Modified for local storage only
+          saveButton.addEventListener('click', () => {
              if(!currentItem){
                 alert("Please search for an item to save!");
                  return;
@@ -747,108 +654,45 @@
 
            if (existingRecordIndex === -1){
              enteredRecords.push(record);
+           } else {
+              enteredRecords[existingRecordIndex] = record; // Update existing record
            }
 
             localStorage.setItem('enteredRecords', JSON.stringify(enteredRecords));
-             renderEnteredRecords();
              clearFields();
             searchBarcodeInput.value = ''; // Clear the search input
               searchResultTable.style.display = 'none';//Clear the search result table
-
-               // **Firebase Upload Entered Records:**
-            try {
-                await databaseFirebase.ref('enteredRecords').set(enteredRecords); // Save entered records to Firebase
-                console.log("Entered records saved to Firebase.");
-            } catch (firebaseError) {
-                console.error("Error saving entered records to Firebase:", firebaseError);
-                alert('Entered record saved locally, but failed to save to Firebase. Check console for errors.');
-            }
+              alert("Entry Saved Locally (Export to keep records)"); // Alert user about local save
           });
 
-        // Clear Functions (Phase 6) - No changes needed
+        // Clear Functions (Phase 6) - Modified for local data only
         clearFieldsButton.addEventListener('click', clearFields);
 
         function clearFields() {
              expiryInputs.innerHTML = '';
         }
-        clearDatabaseButton.addEventListener('click', clearDatabase);
+        clearDatabaseButton.addEventListener('click', clearDatabase); // Renamed button to Clear Data
 
           function clearDatabase() {
-           // **Firebase Clear Logic:**
-            try {
-                databaseFirebase.ref('inventoryData').remove(); // Clear main database in Firebase
-                databaseFirebase.ref('enteredRecords').remove(); // Clear entered records in Firebase
-                console.log("Database cleared from Firebase.");
-            } catch (firebaseError) {
-                console.error("Error clearing database from Firebase:", firebaseError);
-                alert('Database cleared locally, but failed to clear from Firebase. Check console for errors.');
-            }
-
            database = [];
            currentItem = null;
-           enteredRecords = [];
+           enteredRecords = []; // Clear entered records too
            headerMap = {};
            barcodeHeader = '';
            nameHeader = '';
            expiryHeaderCount = 0;
 
-           recordTableBody.innerHTML = '';
            searchBarcodeInput.value = '';
            clearFields();
            saveButton.disabled = true;
            searchResultTable.style.display = 'none';
-           localStorage.clear();
-         alert("Database has been cleared!");
+           localStorage.clear(); // Clear all local storage
+         alert("Data has been cleared locally!"); // Updated alert message
        }
 
 
-        // Render Table & List Box (Phase 7) - No changes needed
-        function renderItemList() {
+        // Render Table & List Box (Phase 7) - No record table anymore
 
-        }
-
-           function renderEnteredRecords() {
-            const tableHead = recordTable.querySelector('thead');
-                const tableBody = recordTable.querySelector('tbody');
-
-                // Clear existing table headers and body
-                tableHead.innerHTML = '';
-                tableBody.innerHTML = '';
-
-                 // Extract all unique headers from the data
-                 const allHeaders = new Set();
-                enteredRecords.forEach(record => {
-                   for (const key in record) {
-                     allHeaders.add(key);
-                    }
-                  });
-                  const headerRow = document.createElement('tr');
-                   allHeaders.forEach(header => {
-                   const headerCell = document.createElement('th');
-                   headerCell.textContent = header;
-                  headerRow.appendChild(headerCell);
-                 });
-
-                  const recordTimeHeader = document.createElement('th');
-                  recordTimeHeader.textContent = "Recording Time";
-                  headerRow.appendChild(recordTimeHeader);
-
-                 tableHead.appendChild(headerRow)
-
-              enteredRecords.forEach(record => {
-                  const row = document.createElement('tr');
-                  allHeaders.forEach(key => {
-                     const cell = document.createElement('td');
-                       cell.textContent = record[key] || '';
-                       row.appendChild(cell);
-                  });
-                   const recordTimeCell = document.createElement('td');
-                    recordTimeCell.textContent = record.recordTime || '';
-                     row.appendChild(recordTimeCell);
-
-                   tableBody.appendChild(row);
-           });
-         }
 
         function renderDataList(){
              const popupTable = document.getElementById('popupTable');
@@ -877,7 +721,7 @@
         }
 
 
-        // Export Data (Phase 8) - No changes needed
+        // Export Data (Phase 8) - Modified to export local entered records
         exportButton.addEventListener('click', () => {
             if (enteredRecords.length === 0) {
                 alert('No records to export!');
@@ -889,9 +733,8 @@
                 const workbook = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventory Records');
                 XLSX.writeFile(workbook, 'inventory_records.xlsx');
-                enteredRecords = [];
-               localStorage.setItem('enteredRecords', JSON.stringify(enteredRecords));
-                renderEnteredRecords();
+                enteredRecords = []; // Clear entered records after export
+               localStorage.setItem('enteredRecords', JSON.stringify(enteredRecords)); // Clear local storage too after export
             } catch (error) {
                 console.error("Error during export:", error);
                 alert('An error occurred while exporting the data.');
@@ -900,7 +743,7 @@
 
        viewDataButton.addEventListener('click', () =>{
             if(database.length === 0){
-               alert("Please import excel sheet to display data!")
+               alert("Please import data to display!") // Updated message
                 return;
             }
            renderDataList();
