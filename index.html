@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventory Manager</title>
     <style>
-        /* Trendy Styles */
+        /* Trendy Styles - Same as before */
         body {
             font-family: 'Nunito Sans', sans-serif; /* Trendy font */
             margin: 20px; /* Increased margin for a cleaner look */
@@ -329,7 +329,7 @@
 
     <div id="dataPopup" style="display:none">
         <div id="dataPopupContent">
-         <span class="closePopup">&times;</span>
+         <span class="closePopup">×</span>
          <table id="popupTable"></table>
         </div>
     </div>
@@ -476,110 +476,100 @@
         loadDataFromLocalStorage();
 
 
-        // Import Functionality (Phase 2)
-        importButton.addEventListener('click', () => {
-            fileInput.click();
-        });
+        // Import Functionality (Phase 2) - Modified for Website File
+        importButton.addEventListener('click', handleWebsiteDataLoad);
 
-        fileInput.addEventListener('change', handleFileImport);
+        async function fetchDataFromWebsite() {
+            // **REPLACE WITH YOUR ACTUAL GITHUB PAGES EXCEL FILE URL HERE:**
+            const excelFileURL = 'https://<your-github-username>.github.io/<your-repository-name>/inventory_data.xlsx';
 
-        async function handleFileImport(event) {
             try {
-                const file = event.target.files[0];
-                if (!file) {
-                    alert('No file selected!');
-                    return;
+                const response = await fetch(excelFileURL);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
+                const arrayBuffer = await response.arrayBuffer(); // Get data as ArrayBuffer
+                return arrayBuffer;
 
-                const reader = new FileReader();
-                reader.onload = async (e) => { // Make onload async
-                    try {
-                        const data = new Uint8Array(e.target.result);
-                        let workbook;
-                        try {
-                            workbook = XLSX.read(data, { type: 'array' });
-                        } catch (e) {
-                            console.error("Error parsing file:", e)
-                            alert('Error parsing file, please check the file format!');
-                            return;
-                        }
-                        const sheetName = workbook.SheetNames[0];
-                        const worksheet = workbook.Sheets[sheetName];
-                        const range = XLSX.utils.decode_range(worksheet['!ref']);
-                        if (range.e.r < 1) {
-                            alert("File contains no data!")
-                            return;
-                        }
-                        const excelData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-                        if (!excelData || excelData.length === 0) {
-                            alert('File is empty or unreadable!');
-                            return;
-                        }
-
-                        const headers = excelData[0];
-                        headers.forEach((header, index) => {
-                            if (header && header.toLowerCase().includes('barcode')) {
-                              barcodeHeader = header;
-                            }
-                            if (header && header.toLowerCase().includes('name')){
-                              nameHeader = header
-                            }
-                             headerMap[header] = index;
-                        });
-
-                         if (!barcodeHeader) {
-                             alert("No 'barcode' column found in the file.")
-                             return;
-                         }
-                         if (!nameHeader){
-                             alert("No 'name' column found in the file.");
-                             return;
-                         }
-
-
-                        database = excelData.slice(1);
-
-                        // **Firebase Upload Logic:**
-                        try {
-                            await databaseFirebase.ref('inventoryData').set({ // 'inventoryData' is the path in your Firebase database
-                                database: database,
-                                headerMap: headerMap,
-                                barcodeHeader: barcodeHeader,
-                                nameHeader: nameHeader
-                            });
-                            alert('Data imported and uploaded to Firebase successfully!');
-                        } catch (firebaseError) {
-                            console.error("Firebase upload error:", firebaseError);
-                            alert('Data imported successfully but failed to upload to Firebase. Check console for errors.');
-                        }
-
-                        localStorage.setItem('database', JSON.stringify(database));
-                        localStorage.setItem('headerMap', JSON.stringify(headerMap));
-                        localStorage.setItem('barcodeHeader', barcodeHeader);
-                        localStorage.setItem('nameHeader', nameHeader);
-
-                        renderEnteredRecords();
-                       viewDataButton.disabled = false;
-
-                    } catch (e) {
-                       console.error("Error parsing file:", e)
-                        alert('Error parsing file, please check the file format!');
-                    }
-                 };
-
-                 reader.onerror = (e) =>{
-                     console.error("Error reading file:", e)
-                        alert('Error reading file, please check the file format!');
-                };
-
-                 reader.readAsArrayBuffer(file);
             } catch (error) {
-                console.error("Error during import:", error);
-                alert('An unexpected error occurred during file import.');
+                console.error("Error fetching Excel file from website:", error);
+                alert('Error loading data from website. Check console.');
+                return null;
             }
         }
 
-       // Search Functionality (Phase 3)
+
+        async function handleWebsiteDataLoad() {
+            const fileData = await fetchDataFromWebsite();
+            if (fileData) {
+                try {
+                    const workbook = XLSX.read(fileData, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const excelData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                    if (!excelData || excelData.length <= 1) {
+                        alert('No data found in the Excel file or file is empty.');
+                        return;
+                    }
+
+                    const headers = excelData[0];
+                    let tempHeaderMap = {};
+                    let tempBarcodeHeader = '';
+                    let tempNameHeader = '';
+
+                    headers.forEach((header, index) => {
+                        if (header && header.toLowerCase().includes('barcode')) {
+                            tempBarcodeHeader = header;
+                        }
+                        if (header && header.toLowerCase().includes('name')) {
+                            tempNameHeader = header;
+                        }
+                        tempHeaderMap[header] = index;
+                    });
+
+                    if (!tempBarcodeHeader) {
+                        alert("No 'barcode' column found in the file.");
+                        return;
+                    }
+                    if (!tempNameHeader) {
+                        alert("No 'name' column found in the file.");
+                        return;
+                    }
+
+                    database = excelData.slice(1);
+
+                    // **Firebase Upload Logic:**
+                    try {
+                        await databaseFirebase.ref('inventoryData').set({ // 'inventoryData' is the path in your Firebase database
+                            database: database,
+                            headerMap: tempHeaderMap,
+                            barcodeHeader: tempBarcodeHeader,
+                            nameHeader: tempNameHeader
+                        });
+                        alert('Data loaded from website and uploaded to Firebase successfully!');
+                    } catch (firebaseError) {
+                        console.error("Firebase upload error:", firebaseError);
+                        alert('Data loaded from website successfully but failed to upload to Firebase. Check console for errors.');
+                    }
+
+                    localStorage.setItem('database', JSON.stringify(database));
+                    localStorage.setItem('headerMap', JSON.stringify(tempHeaderMap));
+                    localStorage.setItem('barcodeHeader', tempBarcodeHeader);
+                    localStorage.setItem('nameHeader', tempNameHeader);
+
+                    renderEnteredRecords();
+                    viewDataButton.disabled = false;
+
+                } catch (e) {
+                   console.error("Error parsing file:", e)
+                    alert('Error parsing file, please check the file format!');
+                }
+             }
+        }
+
+
+       // Search Functionality (Phase 3) - No changes needed
         searchButton.addEventListener('click', () => {
             const barcode = searchBarcodeInput.value.trim();
 
@@ -634,7 +624,7 @@
            searchResultTable.style.display = 'block';
         }
 
-        // Expiry Date Management (Phase 4)
+        // Expiry Date Management (Phase 4) - No changes needed
         addExpiryButton.addEventListener('click', addExpiryEntry);
 
         function addExpiryEntry() {
@@ -708,7 +698,7 @@
 
           return true;
         }
-        // Save Entry (Phase 5)
+        // Save Entry (Phase 5) - No changes needed
           saveButton.addEventListener('click', async () => { // Make event listener async
              if(!currentItem){
                 alert("Please search for an item to save!");
@@ -775,7 +765,7 @@
             }
           });
 
-        // Clear Functions (Phase 6)
+        // Clear Functions (Phase 6) - No changes needed
         clearFieldsButton.addEventListener('click', clearFields);
 
         function clearFields() {
@@ -812,7 +802,7 @@
        }
 
 
-        // Render Table & List Box (Phase 7)
+        // Render Table & List Box (Phase 7) - No changes needed
         function renderItemList() {
 
         }
@@ -887,7 +877,7 @@
         }
 
 
-        // Export Data (Phase 8)
+        // Export Data (Phase 8) - No changes needed
         exportButton.addEventListener('click', () => {
             if (enteredRecords.length === 0) {
                 alert('No records to export!');
