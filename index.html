@@ -673,8 +673,8 @@
         }
 
 
-        // Export Data (Phase 8) - Functionality might need adjustment for Firebase data
-        exportButton.addEventListener('click', () => {
+        // Export Data (Phase 8)
+        exportButton.addEventListener('click', async () => {
             if (enteredRecords.length === 0) {
                 alert('No records to export!');
                 return;
@@ -685,13 +685,25 @@
                 const workbook = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventory Records');
                 XLSX.writeFile(workbook, 'inventory_records.xlsx');
-                enteredRecords = []; // Clear enteredRecords array after export
-                recordTableBody.innerHTML = ''; // Clear record table body after export
-                //renderEnteredRecords(); // No need to refresh table as it's already cleared
-                alert('Data exported and records cleared!'); // Alert user about clearing
+
+                // **--- START: Delete records from Firestore ---**
+                const expiryRecordDocs = await expiryRecordsCollection.get();
+                const batch = db.batch(); // Use a batch for efficient deletion
+
+                expiryRecordDocs.forEach(doc => {
+                    batch.delete(doc.ref); // Add each document to the delete batch
+                });
+
+                await batch.commit(); // Commit the batch delete operation
+                // **--- END: Delete records from Firestore ---**
+
+                enteredRecords = []; // Clear enteredRecords array after export and Firebase deletion
+                recordTableBody.innerHTML = ''; // Clear record table body after export and Firebase deletion
+                alert('Data exported, records cleared from display and Firebase!'); // Updated alert
+
             } catch (error) {
-                console.error("Error during export:", error);
-                alert('An error occurred while exporting the data.');
+                console.error("Error during export or database clearing:", error);
+                alert('An error occurred while exporting or clearing the data.');
             }
         });
 
