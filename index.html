@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventory Manager</title>
+    <link rel="icon" href="favicon.png" type="image/png"> <!-- Favicon added here -->
     <style>
         body {
             font-family: sans-serif;
@@ -153,9 +154,9 @@
              }
         }
     </style>
-     <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
     <div id="currentDateDisplay"></div>
@@ -163,10 +164,9 @@
 
     <div class="container">
         <input type="file" id="fileInput" accept=".xlsx, .xls" style="display:none">
-        <button id="importButton" style="display:none;">Import Data</button>  <!-- Hiding Import Button -->
-        <button id="loadSheetButton">Load Google Sheet Data</button> <!-- Button to load Google Sheet -->
+        <button id="importButton" style="display:none">Import Data</button> <!-- Hiding Import Button -->
         <button id="viewDataButton" disabled>View Imported Data</button>
-        <button id="clearDatabaseButton" disabled>Clear Database</button>
+        <button id="clearDatabaseButton">Clear Database</button>
         </div>
         <br/>
     <div class="container">
@@ -206,7 +206,7 @@
     </table>
 
     <div class="container">
-     <button id="exportButton" disabled>Export Data</button>
+     <button id="exportButton">Export Data</button>
     </div>
 
     <div id="dataPopup" style="display:none">
@@ -229,27 +229,26 @@
           measurementId: "G-VKENXVTLB5"
         };
 
-
         // Initialize Firebase
         const app = firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore(app); // Firestore database instance
+        const db = firebase.firestore(app);
+        const inventoryCollection = db.collection('inventory');
+        const expiryRecordsCollection = db.collection('expiry_records');
 
          // Global variables
-        let database = [];
+        let database = []; // Store Google Sheet data locally after fetching
         let currentItem = null;
-        let enteredRecords = [];
+        let enteredRecords = []; // Store expiry records fetched from Firebase
         let headerMap = {}; // Map to store column index by header
         let barcodeHeader = '';
         let nameHeader = '';
         let expiryHeaderCount = 0;
-
-        const googleSheetCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRBHjQ-Gsb4AFkplCr5sHTme_hAXGzr51-2bhCfrw6rjUaAg5TkRHU8COSYPE9BaA/pub?output=csv";
+        const googleSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRBHjQ-Gsb4AFkplCr5sHTme_hAXGzr51-2bhCfrw6rjUaAg5TkRHU8COSYPE9BaA/pub?output=csv';
 
 
         // Get HTML elements
         const fileInput = document.getElementById('fileInput');
         const importButton = document.getElementById('importButton');
-        const loadSheetButton = document.getElementById('loadSheetButton'); // Google Sheet Load Button
         const searchBarcodeInput = document.getElementById('searchBarcodeInput');
         const searchButton = document.getElementById('searchButton');
          const searchResultTable = document.getElementById('searchResultTable');
@@ -279,148 +278,81 @@
               return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`
           }
 
-
-        // Load data from Firebase Firestore
-        async function loadDataFromFirestore() {
-            try {
-                const metadataDoc = await db.collection('appMetadata').doc('headers').get();
-                if (metadataDoc.exists) {
-                    const metadata = metadataDoc.data();
-                    headerMap = metadata.headerMap || {};
-                    barcodeHeader = metadata.barcodeHeader || '';
-                    nameHeader = metadata.nameHeader || '';
-                }
-
-                const inventoryCollection = db.collection('inventoryData');
-                const snapshot = await inventoryCollection.get();
-                database = [];
-                snapshot.forEach(doc => {
-                    database.push(doc.data());
-                });
-
-
-                renderEnteredRecords();
-
-                if (database.length > 0) {
-                    searchButton.disabled = false;
-                    viewDataButton.disabled = false;
-                    clearDatabaseButton.disabled = false;
-                    exportButton.disabled = false;
-                }
-                console.log("Data loaded from Firestore.");
-
-            } catch (error) {
-                console.error("Error loading data from Firestore:", error);
-                alert("Error loading data from Firebase. Check console.");
-            }
-        }
-
-        loadDataFromFirestore();
+          currentDateDisplay.textContent = `Current Date: ${getCurrentDateTime()}`;
 
 
         // Function to parse CSV data
-        function parseCSV(csvText) {
-            const lines = csvText.trim().split('\n');
+        function parseCSV(csvData) {
+            const lines = csvData.split('\n');
             const headers = lines[0].split(',').map(header => header.trim());
             const data = [];
-            for (let i = 1; i < lines.length; i++) {
-                const currentLine = lines[i].split(',').map(cell => cell.trim());
-                const obj = {};
-                for (let j = 0; j < headers.length; j++) {
-                    obj[headers[j]] = currentLine[j];
+
+            headers.forEach((header, index) => {
+                if(header && header.toLowerCase().includes('barcode')) {
+                  barcodeHeader = header;
                 }
-                data.push(obj);
+                if(header && header.toLowerCase().includes('name')){
+                  nameHeader = header
+                }
+                 headerMap[header] = index;
+            });
+
+             if (!barcodeHeader) {
+                 alert("No 'barcode' column found in the Google Sheet.")
+                 return null; // Indicate error
+             }
+             if (!nameHeader){
+                 alert("No 'name' column found in the Google Sheet.");
+                 return null; // Indicate error
+             }
+
+
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(value => value.trim());
+                if (values.length === headers.length) { // Ensure row has correct number of columns
+                    const item = {};
+                    for (let j = 0; j < headers.length; j++) {
+                        item[headers[j]] = values[j];
+                    }
+                    data.push(item);
+                }
             }
-            return { headers, data };
+            return data;
         }
 
 
-        // Import Functionality from Google Sheet
-        loadSheetButton.addEventListener('click', handleGoogleSheetImport);
-
-        async function handleGoogleSheetImport() {
-             try {
-                 const response = await fetch(googleSheetCsvUrl);
-                 if (!response.ok) {
-                     throw new Error(`HTTP error! status: ${response.status}`);
-                 }
-                 const csvText = await response.text();
-                 const csvData = parseCSV(csvText);
-                 if (!csvData || csvData.data.length === 0) {
-                     alert('Google Sheet is empty or unreadable!');
-                     return;
-                 }
-
-                 const headers = csvData.headers;
-                 headers.forEach((header, index) => {
-                     if(header && header.toLowerCase().includes('barcode')) {
-                       barcodeHeader = header;
-                     }
-                     if(header && header.toLowerCase().includes('name')){
-                       nameHeader = header
-                     }
-                      headerMap[header] = index;
-                 });
-
-                  if (!barcodeHeader) {
-                      alert("No 'barcode' column found in the Google Sheet.")
-                      return;
-                  }
-                  if (!nameHeader){
-                      alert("No 'name' column found in the Google Sheet.");
-                      return;
-                  }
-
-                 database = csvData.data;
-
-                 await saveDatabaseToFirestore(database, headerMap, barcodeHeader, nameHeader);
-
-                 alert('Data imported from Google Sheet successfully!');
-                 renderEnteredRecords();
-                 viewDataButton.disabled = false;
-                 clearDatabaseButton.disabled = false;
-                 exportButton.disabled = false;
-
-
-             } catch (error) {
-                 console.error("Error importing data from Google Sheet:", error);
-                 alert('Error importing data from Google Sheet. Please check console for details.');
-             }
-         }
-
-
-        // Function to save database data to Firestore
-        async function saveDatabaseToFirestore(dbData, headerMapData, barcodeHeaderData, nameHeaderData) {
+        // Fetch data from Google Sheet and load into Firebase and local array
+        async function fetchDataFromGoogleSheet() {
             try {
-                const inventoryCollection = db.collection('inventoryData');
-
-                // Clear existing data in the collection
-                const querySnapshot = await inventoryCollection.get();
-                const batch = db.batch();
-                querySnapshot.forEach(doc => {
-                    batch.delete(doc.ref);
-                });
-                await batch.commit();
-                console.log("Cleared previous inventory data from Firestore.");
-
-
-                for (const item of dbData) {
-                    await inventoryCollection.add(item);
+                const response = await fetch(googleSheetUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const csvData = await response.text();
+                const parsedData = parseCSV(csvData);
+                if (!parsedData) { // Check for parsing error
+                    return;
                 }
 
-                await db.collection('appMetadata').doc('headers').set({
-                    headerMap: headerMapData,
-                    barcodeHeader: barcodeHeaderData,
-                    nameHeader: nameHeaderData
-                });
+                database = parsedData; // Store in local database array for searching
 
-                console.log("Database, header map, and header info saved to Firestore.");
+                // Optionally, you can upload to Firebase here if needed for initial setup
+                // (Be cautious about overwriting existing data if this script runs repeatedly)
+                // For initial load, you might clear existing data in Firebase first or handle updates carefully.
+
+                searchButton.disabled = false;
+                viewDataButton.disabled = false;
+                //renderDataList(); // Optionally render the data popup immediately after loading - removed to prevent automatic popup
+                alert('Data loaded from Google Sheet!');
+
 
             } catch (error) {
-                console.error("Error saving data to Firestore:", error);
-                throw error;
+                console.error("Error fetching or processing Google Sheet data:", error);
+                alert('Failed to load data from Google Sheet. Please check console for details.');
             }
         }
+
+        fetchDataFromGoogleSheet(); // Load data on page load
 
 
        // Search Functionality (Phase 3)
@@ -436,8 +368,7 @@
                 return;
             }
 
-            const foundItem = database.find(item => item[headerMap[barcodeHeader]] === barcode || item[barcodeHeader] === barcode);
-
+            const foundItem = database.find(item => item[barcodeHeader] === barcode);
 
             if (foundItem) {
               currentItem = foundItem;
@@ -569,23 +500,12 @@
                itemData[header] = currentItem[header];
              }
 
-             const existingRecordIndex = enteredRecords.findIndex(record => record[barcodeHeader] === itemData[barcodeHeader] || record[barcodeHeader] === itemData[barcodeHeader]);
-
-           let record = existingRecordIndex === -1 ? {...itemData} : enteredRecords[existingRecordIndex]
-
+             const barcode = itemData[barcodeHeader];
+             let record = { ...itemData }; // Start with item data
 
           let count = 1;
-          if(existingRecordIndex !== -1){
-              for(let i = 1; ; i++) {
-                    const expiryDateKey = `expiryDate${i}`;
-                   if (record.hasOwnProperty(expiryDateKey)){
-                         count++;
-                   }else {
-                    break;
-                    }
-               }
-             }
-              const saveTime = getCurrentDateTime();
+
+          const saveTime = getCurrentDateTime();
           record[`recordTime`] = saveTime;
         expiryEntries.forEach(entryDiv =>{
             const dateInput = entryDiv.querySelector('input[type="text"]');
@@ -600,43 +520,20 @@
              count++;
            });
 
-           if (existingRecordIndex === -1){
-             enteredRecords.push(record);
+
+           try {
+               await expiryRecordsCollection.add(record); // Add new expiry record to Firebase
+               alert('Expiry data saved successfully!');
+               renderEnteredRecords(); // Refresh displayed records
+               clearFields();
+                searchBarcodeInput.value = ''; // Clear the search input
+                  searchResultTable.style.display = 'none';//Clear the search result table
+
+           } catch (error) {
+               console.error("Error saving expiry data to Firebase:", error);
+               alert('Failed to save expiry data. Please check console for details.');
            }
-
-
-            await saveEnteredRecordsToFirestore(enteredRecords);
-             renderEnteredRecords();
-             clearFields();
-            searchBarcodeInput.value = '';
-              searchResultTable.style.display = 'none';
           });
-
-           // Function to save entered records to Firestore
-        async function saveEnteredRecordsToFirestore(records) {
-            try {
-                const recordsCollection = db.collection('inventoryRecords');
-
-                // Clear existing records before saving new ones - you might want to adjust this logic
-                const querySnapshot = await recordsCollection.get();
-                const batch = db.batch();
-                querySnapshot.forEach(doc => {
-                    batch.delete(doc.ref);
-                });
-                await batch.commit();
-                console.log("Cleared previous entered records from Firestore.");
-
-
-                for (const record of records) {
-                    await recordsCollection.add(record);
-                }
-                console.log("Entered records saved to Firestore.");
-
-            } catch (error) {
-                console.error("Error saving entered records to Firestore:", error);
-                alert("Error saving entered records to Firebase. Check console.");
-            }
-        }
 
         // Clear Functions (Phase 6)
         clearFieldsButton.addEventListener('click', clearFields);
@@ -647,64 +544,53 @@
         clearDatabaseButton.addEventListener('click', clearDatabase);
 
           async function clearDatabase() {
-           await clearFirestoreDatabase();
-
-           database = [];
-           currentItem = null;
-           enteredRecords = [];
-           headerMap = {};
-           barcodeHeader = '';
-           nameHeader = '';
-           expiryHeaderCount = 0;
-
-           recordTableBody.innerHTML = '';
-           searchBarcodeInput.value = '';
-           clearFields();
-           saveButton.disabled = true;
-           viewDataButton.disabled = true;
-           clearDatabaseButton.disabled = true;
-           exportButton.disabled = true;
-           searchButton.disabled = true;
-           searchResultTable.style.display = 'none';
-
-         alert("Database has been cleared from Firebase!");
-       }
-
-        async function clearFirestoreDatabase() {
-            try {
-                // Clear 'inventoryData' collection
-                const inventoryCollection = db.collection('inventoryData');
-                let querySnapshot = await inventoryCollection.get();
-                let batch = db.batch();
-                querySnapshot.forEach(doc => {
-                    batch.delete(doc.ref);
-                });
-                await batch.commit();
-                console.log("Cleared 'inventoryData' collection.");
-
-                // Clear 'inventoryRecords' collection
-                const recordsCollection = db.collection('inventoryRecords');
-                querySnapshot = await recordsCollection.get();
-                batch = db.batch();
-                querySnapshot.forEach(doc => {
-                    batch.delete(doc.ref);
-                });
-                await batch.commit();
-                console.log("Cleared 'inventoryRecords' collection.");
-
-                // Clear header metadata
-                await db.collection('appMetadata').doc('headers').delete();
-                console.log("Cleared header metadata.");
-
-            } catch (error) {
-                console.error("Error clearing Firestore database:", error);
-                alert("Error clearing database in Firebase. Check console.");
+           if (!confirm("Are you sure you want to clear ALL data from Firebase? This action is irreversible!")) {
+                return; // Do nothing if user cancels
             }
-        }
+
+           try {
+                // Clear 'inventory' collection (if needed - might be better to manage Google Sheet directly)
+                const inventoryDocs = await inventoryCollection.get();
+                const batch = db.batch();
+                inventoryDocs.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                await batch.commit();
+
+                // Clear 'expiry_records' collection
+                const expiryRecordDocs = await expiryRecordsCollection.get();
+                const expiryBatch = db.batch();
+                expiryRecordDocs.forEach(doc => {
+                    expiryBatch.delete(doc.ref);
+                });
+                await expiryBatch.commit();
+
+
+               database = [];
+               currentItem = null;
+               enteredRecords = [];
+               headerMap = {};
+               barcodeHeader = '';
+               nameHeader = '';
+               expiryHeaderCount = 0;
+
+               recordTableBody.innerHTML = '';
+               searchBarcodeInput.value = '';
+               clearFields();
+               saveButton.disabled = true;
+               searchButton.disabled = true; // Disable search button as database is cleared
+               viewDataButton.disabled = true; // Disable view data button
+               searchResultTable.style.display = 'none';
+
+             alert("Database in Firebase has been cleared!");
+           } catch (error) {
+               console.error("Error clearing Firebase database:", error);
+               alert('Error clearing database. Check console for details.');
+           }
+       }
 
 
         // Render Table & List Box (Phase 7)
-
 
            async function renderEnteredRecords() {
             const tableHead = recordTable.querySelector('thead');
@@ -715,60 +601,52 @@
                 tableBody.innerHTML = '';
 
                 try {
-                    const recordsCollection = db.collection('inventoryRecords');
-                    const snapshot = await recordsCollection.get();
-                    enteredRecords = [];
-                    const recordsFromFirestore = [];
-                    snapshot.forEach(doc => {
-                        recordsFromFirestore.push(doc.data());
-                        enteredRecords.push(doc.data());
-                    });
+                    const snapshot = await expiryRecordsCollection.get();
+                    enteredRecords = snapshot.docs.map(doc => doc.data());
 
 
-                    if (recordsFromFirestore.length === 0) {
-                        return;
-                    }
-
-                    const allHeaders = new Set();
-                    recordsFromFirestore.forEach(record => {
-                        for (const key in record) {
-                            allHeaders.add(key);
+                     // Extract all unique headers from the data
+                     const allHeaders = new Set();
+                    enteredRecords.forEach(record => {
+                       for (const key in record) {
+                         allHeaders.add(key);
                         }
-                    });
-                    const headerRow = document.createElement('tr');
-                    allHeaders.forEach(header => {
-                        const headerCell = document.createElement('th');
-                        headerCell.textContent = header;
-                        headerRow.appendChild(headerCell);
-                    });
+                      });
+                      const headerRow = document.createElement('tr');
+                       allHeaders.forEach(header => {
+                       const headerCell = document.createElement('th');
+                       headerCell.textContent = header;
+                      headerRow.appendChild(headerCell);
+                     });
 
-                    const recordTimeHeader = document.createElement('th');
-                    recordTimeHeader.textContent = "Recording Time";
-                    headerRow.appendChild(recordTimeHeader);
+                      const recordTimeHeader = document.createElement('th');
+                      recordTimeHeader.textContent = "Recording Time";
+                      headerRow.appendChild(recordTimeHeader);
 
-                    tableHead.appendChild(headerRow);
+                     tableHead.appendChild(headerRow)
 
-                    recordsFromFirestore.forEach(record => {
-                        const row = document.createElement('tr');
-                        allHeaders.forEach(key => {
-                            const cell = document.createElement('td');
-                            cell.textContent = record[key] || '';
-                            row.appendChild(cell);
-                        });
-                        const recordTimeCell = document.createElement('td');
+                  enteredRecords.forEach(record => {
+                      const row = document.createElement('tr');
+                      allHeaders.forEach(key => {
+                         const cell = document.createElement('td');
+                           cell.textContent = record[key] || '';
+                           row.appendChild(cell);
+                      });
+                       const recordTimeCell = document.createElement('td');
                         recordTimeCell.textContent = record.recordTime || '';
-                        row.appendChild(recordTimeCell);
+                         row.appendChild(recordTimeCell);
 
-                        tableBody.appendChild(row);
-                    });
+                       tableBody.appendChild(row);
+               });
+
 
                 } catch (error) {
-                    console.error("Error rendering entered records from Firestore:", error);
-                    alert("Error rendering entered records. Check console.");
+                    console.error("Error fetching expiry records from Firebase:", error);
+                    alert('Failed to load saved records. Check console for details.');
                 }
          }
 
-        function renderDataList(){
+        async function renderDataList(){
              const popupTable = document.getElementById('popupTable');
             popupTable.innerHTML = '';
 
@@ -795,7 +673,7 @@
         }
 
 
-        // Export Data (Phase 8)
+        // Export Data (Phase 8) - Functionality might need adjustment for Firebase data
         exportButton.addEventListener('click', () => {
             if (enteredRecords.length === 0) {
                 alert('No records to export!');
@@ -807,9 +685,10 @@
                 const workbook = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventory Records');
                 XLSX.writeFile(workbook, 'inventory_records.xlsx');
-                enteredRecords = [];
-                saveEnteredRecordsToFirestore(enteredRecords); // Clear Firestore records after export - adjust logic if needed.
-                renderEnteredRecords();
+                enteredRecords = []; // Clear enteredRecords array after export
+                recordTableBody.innerHTML = ''; // Clear record table body after export
+                //renderEnteredRecords(); // No need to refresh table as it's already cleared
+                alert('Data exported and records cleared!'); // Alert user about clearing
             } catch (error) {
                 console.error("Error during export:", error);
                 alert('An error occurred while exporting the data.');
@@ -818,7 +697,7 @@
 
        viewDataButton.addEventListener('click', () =>{
             if(database.length === 0){
-               alert("Please Load Google Sheet data to display!");
+               alert("Data from Google Sheet is still loading or failed to load.")
                 return;
             }
            renderDataList();
@@ -834,6 +713,8 @@
               dataPopup.style.display = 'none';
            }
          });
+
+         renderEnteredRecords(); // Load saved expiry records from Firebase on page load as well.
     </script>
 </body>
 </html>
