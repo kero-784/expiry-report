@@ -38,7 +38,7 @@
              padding: 12px 20px;
         }
 
-        input[type="text"], input[type="number"] {
+        input[type="text"], input[type="number"], input[type="date"] { /* Added input[type="date"] */
             padding: 8px;
             margin: 5px;
             border: 1px solid #ccc;
@@ -144,7 +144,7 @@
             padding: 10px 16px;
             margin: 3px;
           }
-            input[type="text"], input[type="number"] {
+            input[type="text"], input[type="number"], input[type="date"] { /* Added input[type="date"] */
                  font-size: 0.9em;
                  padding: 6px;
             }
@@ -220,7 +220,7 @@
     <script>
          // Firebase Configuration
         const firebaseConfig = {
-          apiKey: "AIzaSyCOODiDUvRq7EaOZtmK7C82dAGCtCjEGBI",
+          apiKey: "YOUR_API_KEY", // <---- REPLACE WITH YOUR ACTUAL API KEY FROM FIREBASE CONSOLE
           authDomain: "expiry-record.firebaseapp.com",
           projectId: "expiry-record",
           storageBucket: "expiry-record.firebasestorage.app",
@@ -417,27 +417,20 @@
             const entryDiv = document.createElement('div');
 
             const dateInput = document.createElement('input');
-            dateInput.type = 'text';
-            dateInput.placeholder = 'Expiry Date (dd/mm/yyyy)';
-           dateInput.addEventListener('input', (e) => {
-              let value = e.target.value.replace(/[^0-9]/g, '');
-                 if (value.length > 8){
-                    value = value.substring(0, 8);
-                   }
-                if (value.length > 2) {
-                  value = value.substring(0,2) + "/" + value.substring(2);
-               }
-               if (value.length > 5) {
-                  value = value.substring(0, 5) + "/" + value.substring(5);
-              }
-              e.target.value = value;
-            });
-             dateInput.addEventListener('blur', (e) =>{
-                if(!isValidDate(e.target.value)){
-                   alert('Invalid date, Please use correct dd/mm/yyyy format, Ensure that the date is not in the past or too far into the future!');
-                   e.target.value = '';
+            dateInput.type = 'date'; // Changed to type="date"
+            dateInput.placeholder = 'Expiry Date'; // Placeholder is less relevant for date picker
+
+            // Event listener to format date to dd/mm/yyyy on blur (when user finishes selecting date)
+            dateInput.addEventListener('blur', (e) => {
+                if (e.target.value) { // Check if a date is selected
+                    const selectedDate = new Date(e.target.value); // Date object from yyyy-mm-dd
+                    const day = String(selectedDate.getDate()).padStart(2, '0');
+                    const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+                    const year = selectedDate.getFullYear();
+                    e.target.value = `${day}/${month}/${year}`; // Format to dd/mm/yyyy for display and saving
                 }
             });
+
 
             const quantityInput = document.createElement('input');
             quantityInput.type = 'number';
@@ -466,23 +459,14 @@
           const date = new Date(year, month-1, day);
 
            if (date.getDate() !== day || date.getMonth() + 1 !== month || date.getFullYear() !== year) {
-           return false;
-           }
-             const currentDate = new Date();
-             const futureDate = new Date();
-              futureDate.setFullYear(currentDate.getFullYear() + 5);
-
-           if (date.getTime() < currentDate.getTime()) {
-             return false;
-            }
-          if (date.getTime() > futureDate.getTime()) {
-             return false;
-           }
-            if(date.getTime() === currentDate.getTime()){
-            return false;
+           return false; // Invalid date (e.g., 31/02/2024)
            }
 
-          return true;
+            // Removed Past Date Restriction
+            // Removed Future Date Restriction
+            // Removed Current Date Restriction
+
+          return true; // Now only validates format and if it's a valid date
         }
         // Save Entry (Phase 5)
           saveButton.addEventListener('click', async () => {
@@ -508,14 +492,15 @@
           const saveTime = getCurrentDateTime();
           record[`recordTime`] = saveTime;
         expiryEntries.forEach(entryDiv =>{
-            const dateInput = entryDiv.querySelector('input[type="text"]');
+            const dateInput = entryDiv.querySelector('input[type="date"]');
             const quantityInput = entryDiv.querySelector('input[type="number"]');
             if(!dateInput.value || !quantityInput.value){
               alert("Please ensure you have filled out all date and quantity entries!");
               return;
             }
 
-               record[`expiryDate${count}`] = dateInput.value;
+               const formattedDate = dateInput.value; // Date is already formatted in blur event
+               record[`expiryDate${count}`] = formattedDate;
                record[`quantity${count}`] = parseInt(quantityInput.value, 10);
              count++;
            });
