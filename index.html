@@ -457,17 +457,11 @@
             dateInput.type = 'date';
             dateInput.placeholder = 'Expiry Date';
 
-            // Event listener to format date to dd/mm/yyyy for DISPLAY only on change
+            // Simplified change event listener for debugging
             dateInput.addEventListener('change', (e) => {
-                if (e.target.value) {
-                    const selectedDate = new Date(e.target.value);
-                    const day = String(selectedDate.getDate()).padStart(2, '0');
-                    const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
-                    const year = selectedDate.getFullYear();
-                    e.target.value = `${day}/${month}/${year}`; // Format for display (dd/mm/yyyy)
-                }
+                console.log("Date Input 'change' event fired!");
+                console.log("Date Input Value (yyyy-MM-dd):", e.target.value); // Log the value
             });
-
 
             const quantityInput = document.createElement('input');
             quantityInput.type = 'number';
