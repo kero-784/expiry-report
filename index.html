@@ -319,11 +319,23 @@
 
         // Function to parse CSV data
         function parseCSV(csvData) {
+            console.log("parseCSV() - START: Parsing CSV data...");
             const lines = csvData.split('\n');
-            const headers = lines[0].split(',').map(header => header.trim());
+            if (lines.length === 0) {
+                console.warn("parseCSV() - WARN: CSV data is empty or has no lines.");
+                return [];
+            }
+            const headers = lines[0].split('\n');
+            if (!headers || headers.length === 0) {
+                console.warn("parseCSV() - WARN: No headers found in CSV data.");
+                return [];
+            }
+            const parsedHeaders = headers[0].split(',').map(header => header.trim());
+            console.log("parseCSV() - DEBUG: Parsed Headers:", parsedHeaders);
             const data = [];
+            headerMap = {}; // Reset headerMap here
 
-            headers.forEach((header, index) => {
+            parsedHeaders.forEach((header, index) => {
                 if(header && header.toLowerCase().includes('barcode')) {
                   barcodeHeader = header;
                 }
@@ -332,6 +344,7 @@
                 }
                  headerMap[header] = index;
             });
+            console.log("parseCSV() - DEBUG: Header Map:", headerMap);
 
              if (!barcodeHeader) {
                  alert("No 'barcode' column found in the Google Sheet.")
@@ -344,40 +357,49 @@
 
 
             for (let i = 1; i < lines.length; i++) {
-                const values = lines[i].split('\n').map(value => value.trim());
-                if (values.length === headers.length) {
+                const values = lines[i].split(',').map(value => value.trim());
+                if (values.length === parsedHeaders.length) {
                     const item = {};
-                    for (let j = 0; j < headers.length; j++) {
-                        item[headers[j]] = values[j];
+                    for (let j = 0; j < parsedHeaders.length; j++) {
+                        item[parsedHeaders[j]] = values[j];
                     }
                     data.push(item);
+                } else if (values.length > 0 && values[0] !== ""){ //added condition to ignore empty lines
+                    console.warn(`parseCSV() - WARN: Row ${i + 2} has incorrect number of columns, skipping row. Expected: ${parsedHeaders.length}, Got: ${values.length}. Values:`, values);
                 }
             }
+            console.log("parseCSV() - DEBUG: Parsed Data (first 2 items):", data.slice(0, 2));
+            console.log("parseCSV() - END: CSV parsing completed. Data item count:", data.length);
             return data;
         }
 
 
         async function fetchDataFromGoogleSheet() {
+            console.log("fetchDataFromGoogleSheet() - START: Fetching data from Google Sheet...");
             try {
                 const response = await fetch(googleSheetUrl);
+                console.log("fetchDataFromGoogleSheet() - DEBUG: Fetch Response Status:", response.status, response.statusText);
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`fetchDataFromGoogleSheet() - ERROR: HTTP error! status: ${response.status}, text: ${response.statusText}`);
                 }
                 const csvData = await response.text();
+                console.log("fetchDataFromGoogleSheet() - DEBUG: CSV Data Fetched Successfully (first 50 chars):", csvData.substring(0, 50) + "...");
                 const parsedData = parseCSV(csvData);
                 if (!parsedData) {
                     return;
                 }
 
                 database = parsedData;
+                console.log("fetchDataFromGoogleSheet() - DEBUG: Data loaded into database. Item count:", database.length);
 
                 searchButton.disabled = false;
                 viewDataButton.disabled = false;
                 alert('Data loaded from Google Sheet!');
+                 console.log("fetchDataFromGoogleSheet() - END: Data loading process successful.");
 
 
             } catch (error) {
-                console.error("Error fetching or processing Google Sheet data:", error);
+                console.error("fetchDataFromGoogleSheet() - ERROR: Error during Google Sheet data fetch or processing:", error);
                 alert('Failed to load data from Google Sheet. Please check console for details.');
             }
         }
@@ -450,12 +472,17 @@
 
             // Event listener to format date to dd/mm/yyyy for DISPLAY on change
             dateInput.addEventListener('change', function(e) { // Changed to standard function for 'this' context
-                if (this.value) { // Use 'this' to refer to dateInput
-                    const selectedDate = new Date(this.value); // Use 'this'
+                console.log("addExpiryEntry() - DEBUG: Date input 'change' event fired. Value from date picker (yyyy-mm-dd):", this.value);
+                if (this.value) {
+                    const selectedDate = new Date(this.value);
                     const day = String(selectedDate.getDate()).padStart(2, '0');
                     const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
                     const year = selectedDate.getFullYear();
-                    this.value = `${day}/${month}/${year}`; // Format for display (dd/mm/yyyy) and set back to input
+                    const formattedDate = `${day}/${month}/${year}`; // Format for display (dd/mm/yyyy)
+                    e.target.value = formattedDate; // Correctly use e.target to set input value
+                    console.log("addExpiryEntry() - DEBUG: Formatted date for display (dd/mm/yyyy):", formattedDate);
+                } else {
+                    console.log("addExpiryEntry() - DEBUG: No date selected from date picker.");
                 }
             });
 
@@ -479,7 +506,7 @@
         }
 
           function isValidDate(dateString){
-          if(!/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
+          if(!/^\d{2}\/\d{2}\/\d{4}$/.test(dateString) {
            return false;
            }
 
@@ -507,194 +534,201 @@
         }
 
         saveButton.addEventListener('click', async () => {
-             if(!currentItem){
-                alert("Please search for an item to save!");
-                 return;
-             }
-           const expiryEntries = expiryInputs.querySelectorAll('div');
-           if (expiryEntries.length === 0) {
-             alert('Please add at least one expiry entry!');
-              return;
+            if(!currentItem){
+               alert("Please search for an item to save!");
+                return;
             }
-             const itemData = {};
-             for(const header in headerMap) {
-               itemData[header] = currentItem[header];
-             }
-
-             const barcode = itemData[barcodeHeader];
-             let record = { ...itemData };
-
-          let count = 1;
-
-          const saveTime = getCurrentDateTime();
-          record[`recordTime`] = saveTime;
-        expiryEntries.forEach(entryDiv =>{
-            const dateInput = entryDiv.querySelector('input[type="date"]');
-            const quantityInput = entryDiv.querySelector('input[type="number"]');
-            if(!dateInput.value || !quantityInput.value){
-              alert("Please ensure you have filled out all date and quantity entries!");
-              return;
-            }
-
-               const yyyyMmDdDate = dateInput.value; // Get date in yyyy-MM-dd format from date input
-               const selectedDateForSave = new Date(yyyyMmDdDate); // Create Date object for formatting
-               const day = String(selectedDateForSave.getDate()).padStart(2, '0');
-               const month = String(selectedDateForSave.getMonth() + 1).padStart(2, '0');
-               const year = selectedDateForSave.getFullYear();
-               const formattedDateForSave = `${day}/${month}/${year}`; // Format for saving dd/mm/yyyy
-
-
-               record[`expiryDate${count}`] = formattedDateForSave; // Save as dd/mm/yyyy
-               record[`quantity${count}`] = parseInt(quantityInput.value, 10);
-             count++;
-           });
-
-
-           try {
-               await expiryRecordsCollection.add(record);
-               alert('Expiry data saved successfully!');
-               renderEnteredRecords();
-               clearFields();
-                searchBarcodeInput.value = '';
-                  searchResultTable.style.display = 'none';
-
-           } catch (error) {
-               console.error("Error saving expiry data to Firebase:", error);
-               alert('Failed to save expiry data. Please check console for details.');
+          const expiryEntries = expiryInputs.querySelectorAll('div');
+          if (expiryEntries.length === 0) {
+            alert('Please add at least one expiry entry!');
+             return;
            }
+            const itemData = {};
+            for(const header in headerMap) {
+              itemData[header] = currentItem[header];
+            }
+
+            const barcode = itemData[barcodeHeader];
+            let record = { ...itemData };
+
+         let count = 1;
+
+         const saveTime = getCurrentDateTime();
+         record[`recordTime`] = saveTime;
+       expiryEntries.forEach(entryDiv =>{
+           const dateInput = entryDiv.querySelector('input[type="date"]');
+           const quantityInput = entryDiv.querySelector('input[type="number"]');
+           if(!dateInput.value || !quantityInput.value){
+             alert("Please ensure you have filled out all date and quantity entries!");
+             return;
+           }
+
+              const yyyyMmDdDate = dateInput.value; // Get date in yyyy-MM-dd format from date input
+              console.log("saveButton() - DEBUG: Date input value (yyyy-mm-dd) from date picker:", yyyyMmDdDate);
+              const selectedDateForSave = new Date(yyyyMmDdDate); // Create Date object for formatting
+              if (isNaN(selectedDateForSave.getTime())) { // Check if date is valid
+                console.error("saveButton() - ERROR: Invalid date parsed from date picker:", yyyyMmDdDate);
+                alert("Error: Invalid date selected. Please choose a valid date.");
+                return; // Stop saving if date is invalid
+               }
+              const day = String(selectedDateForSave.getDate()).padStart(2, '0');
+              const month = String(selectedDateForSave.getMonth() + 1).padStart(2, '0');
+              const year = String(selectedDateForSave.getFullYear()); // Ensure year is also a string
+              const formattedDateForSave = `${day}/${month}/${year}`; // Format for saving dd/mm/yyyy
+              console.log("saveButton() - DEBUG: Formatted date for saving (dd/mm/yyyy):", formattedDateForSave);
+
+
+              record[`expiryDate${count}`] = formattedDateForSave; // Save as dd/mm/yyyy
+              record[`quantity${count}`] = parseInt(quantityInput.value, 10);
+            count++;
           });
 
 
-        clearFieldsButton.addEventListener('click', clearFields);
+          try {
+              await expiryRecordsCollection.add(record);
+              alert('Expiry data saved successfully!');
+              renderEnteredRecords();
+              clearFields();
+               searchBarcodeInput.value = '';
+                 searchResultTable.style.display = 'none';
 
-        function clearFields() {
-             expiryInputs.innerHTML = '';
-        }
-        clearDatabaseButton.addEventListener('click', clearDatabase);
+          } catch (error) {
+              console.error("saveButton() - ERROR: Error saving expiry data to Firebase:", error);
+              alert('Failed to save expiry data. Please check console for details.');
+          }
+         });
 
-          async function clearDatabase() {
-           if (!confirm("Are you sure you want to clear ALL data from Firebase? This action is irreversible!")) {
-                return;
-            }
+
+       clearFieldsButton.addEventListener('click', clearFields);
+
+       function clearFields() {
+            expiryInputs.innerHTML = '';
+       }
+       clearDatabaseButton.addEventListener('click', clearDatabase);
+
+         async function clearDatabase() {
+          if (!confirm("Are you sure you want to clear ALL data from Firebase? This action is irreversible!")) {
+               return;
+           }
+
+          try {
+
+               const inventoryDocs = await inventoryCollection.get();
+               const batch = db.batch();
+               inventoryDocs.forEach(doc => {
+                   batch.delete(doc.ref);
+               });
+               await batch.commit();
+
+
+               const expiryRecordDocs = await expiryRecordsCollection.get();
+               const expiryBatch = db.batch();
+               expiryRecordDocs.forEach(doc => {
+                   expiryBatch.delete(doc.ref);
+               });
+               await expiryBatch.commit();
+
+
+              database = [];
+              currentItem = null;
+              enteredRecords = [];
+              headerMap = {};
+              barcodeHeader = '';
+              nameHeader = '';
+              expiryHeaderCount = 0;
+
+              recordTableBody.innerHTML = '';
+              searchBarcodeInput.value = '';
+              clearFields();
+              saveButton.disabled = true;
+              searchButton.disabled = true;
+              viewDataButton.disabled = true;
+              searchResultTable.style.display = 'none';
+
+            alert("Database in Firebase has been cleared!");
+          } catch (error) {
+              console.error("Error clearing Firebase database:", error);
+              alert('Error clearing database. Check console for details.');
+          }
+      }
+
+       // Define the desired header order here
+       const orderedHeaders = ["barcode", "code", "name", "unit", "supplier name", "supplier code", "status", "recordTime", "expiryDate1", "quantity1", "Recording Time"];
+
+
+          async function renderEnteredRecords() {
+           const tableHead = recordTable.querySelector('thead');
+           const tableBody = recordTable.querySelector('tbody');
+
+           tableHead.innerHTML = '';
+           tableBody.innerHTML = '';
 
            try {
-
-                const inventoryDocs = await inventoryCollection.get();
-                const batch = db.batch();
-                inventoryDocs.forEach(doc => {
-                    batch.delete(doc.ref);
-                });
-                await batch.commit();
-
-
-                const expiryRecordDocs = await expiryRecordsCollection.get();
-                const expiryBatch = db.batch();
-                expiryRecordDocs.forEach(doc => {
-                    expiryBatch.delete(doc.ref);
-                });
-                await expiryBatch.commit();
+               const snapshot = await expiryRecordsCollection.get();
+               // Map Firebase data to include only ordered headers and in correct order for export
+               enteredRecords = snapshot.docs.map(doc => {
+                   const data = doc.data();
+                   const orderedData = {};
+                   orderedHeaders.forEach(header => {
+                       orderedData[header] = data[header] || ''; // Ensure all headers are included, use empty string if missing
+                   });
+                   return orderedData;
+               });
 
 
-               database = [];
-               currentItem = null;
-               enteredRecords = [];
-               headerMap = {};
-               barcodeHeader = '';
-               nameHeader = '';
-               expiryHeaderCount = 0;
+               const headerRow = document.createElement('tr');
+               orderedHeaders.forEach(header => {
+                   const headerCell = document.createElement('th');
+                   headerCell.textContent = header;
+                   headerRow.appendChild(headerCell);
+               });
+               tableHead.appendChild(headerRow)
 
-               recordTableBody.innerHTML = '';
-               searchBarcodeInput.value = '';
-               clearFields();
-               saveButton.disabled = true;
-               searchButton.disabled = true;
-               viewDataButton.disabled = true;
-               searchResultTable.style.display = 'none';
+               enteredRecords.forEach(record => {
+                   const row = document.createElement('tr');
+                   orderedHeaders.forEach(header => {
+                       const cell = document.createElement('td');
+                       cell.textContent = record[header] || '';
+                       row.appendChild(cell);
+                   });
+                   tableBody.appendChild(row);
+               });
 
-             alert("Database in Firebase has been cleared!");
+
            } catch (error) {
-               console.error("Error clearing Firebase database:", error);
-               alert('Error clearing database. Check console for details.');
+               console.error("Error fetching expiry records from Firebase:", error);
+               alert('Failed to load saved records. Check console for details.');
            }
-       }
-
-        // Define the desired header order here
-        const orderedHeaders = ["barcode", "code", "name", "unit", "supplier name", "supplier code", "status", "recordTime", "expiryDate1", "quantity1", "Recording Time"];
-
-
-           async function renderEnteredRecords() {
-            const tableHead = recordTable.querySelector('thead');
-            const tableBody = recordTable.querySelector('tbody');
-
-            tableHead.innerHTML = '';
-            tableBody.innerHTML = '';
-
-            try {
-                const snapshot = await expiryRecordsCollection.get();
-                // Map Firebase data to include only ordered headers and in correct order for export
-                enteredRecords = snapshot.docs.map(doc => {
-                    const data = doc.data();
-                    const orderedData = {};
-                    orderedHeaders.forEach(header => {
-                        orderedData[header] = data[header] || ''; // Ensure all headers are included, use empty string if missing
-                    });
-                    return orderedData;
-                });
-
-
-                const headerRow = document.createElement('tr');
-                orderedHeaders.forEach(header => {
-                    const headerCell = document.createElement('th');
-                    headerCell.textContent = header;
-                    headerRow.appendChild(headerCell);
-                });
-                tableHead.appendChild(headerRow)
-
-                enteredRecords.forEach(record => {
-                    const row = document.createElement('tr');
-                    orderedHeaders.forEach(header => {
-                        const cell = document.createElement('td');
-                        cell.textContent = record[header] || '';
-                        row.appendChild(cell);
-                    });
-                    tableBody.appendChild(row);
-                });
-
-
-            } catch (error) {
-                console.error("Error fetching expiry records from Firebase:", error);
-                alert('Failed to load saved records. Check console for details.');
-            }
-         }
-
-        async function renderDataList(){
-             const popupTable = document.getElementById('popupTable');
-            popupTable.innerHTML = '';
-
-            const headerRowForExport = document.createElement('tr');
-            orderedHeaders.forEach(headerText => {
-              const th = document.createElement('th');
-              th.textContent = headerText;
-              headerRowForExport.appendChild(th);
-            });
-            popupTable.appendChild(headerRowForExport);
-
-
-            database.forEach(row => {
-              const tr = document.createElement('tr');
-              for (const header in headerMap) {
-                const td = document.createElement('td');
-                td.textContent = row[header];
-                tr.appendChild(td);
-              }
-              popupTable.appendChild(tr);
-            });
-
-            dataPopup.style.display = 'flex';
         }
 
+       async function renderDataList(){
+            const popupTable = document.getElementById('popupTable');
+           popupTable.innerHTML = '';
 
-        exportButton.addEventListener('click', async () => {
+           const headerRowForExport = document.createElement('tr');
+           orderedHeaders.forEach(headerText => {
+             const th = document.createElement('th');
+             th.textContent = headerText;
+             headerRowForExport.appendChild(th);
+           });
+           popupTable.appendChild(headerRowForExport);
+
+
+           database.forEach(row => {
+             const tr = document.createElement('tr');
+             for (const header in headerMap) {
+               const td = document.createElement('td');
+               td.textContent = row[header];
+               tr.appendChild(td);
+             }
+             popupTable.appendChild(tr);
+           });
+
+           dataPopup.style.display = 'flex';
+       }
+
+
+       exportButton.addEventListener('click', async () => {
             if (enteredRecords.length === 0) {
                 alert('No records to export!');
                 return;
