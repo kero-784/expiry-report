@@ -319,14 +319,8 @@
 
         // Function to parse CSV data
         function parseCSV(csvData) {
-            console.log("parseCSV() - START: Parsing CSV data...");
             const lines = csvData.split('\n');
-            if (lines.length === 0) {
-                console.warn("parseCSV() - WARN: CSV data is empty or has no lines.");
-                return [];
-            }
             const headers = lines[0].split(',').map(header => header.trim());
-            console.log("parseCSV() - DEBUG: Parsed Headers:", headers);
             const data = [];
 
             headers.forEach((header, index) => {
@@ -338,7 +332,6 @@
                 }
                  headerMap[header] = index;
             });
-            console.log("parseCSV() - DEBUG: Header Map:", headerMap);
 
              if (!barcodeHeader) {
                  alert("No 'barcode' column found in the Google Sheet.")
@@ -360,38 +353,31 @@
                     data.push(item);
                 }
             }
-            console.log("parseCSV() - DEBUG: Parsed Data (first 2 items):", data.slice(0, 2));
-            console.log("parseCSV() - END: CSV parsing completed. Data item count:", data.length);
             return data;
         }
 
 
         async function fetchDataFromGoogleSheet() {
-            console.log("fetchDataFromGoogleSheet() - START: Fetching data from Google Sheet...");
             try {
                 const response = await fetch(googleSheetUrl);
-                console.log("fetchDataFromGoogleSheet() - DEBUG: Fetch Response Status:", response.status, response.statusText);
                 if (!response.ok) {
-                    throw new Error(`fetchDataFromGoogleSheet() - ERROR: HTTP error! status: ${response.status}, text: ${response.statusText}`);
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const csvData = await response.text();
-                console.log("fetchDataFromGoogleSheet() - DEBUG: CSV Data Fetched Successfully (first 50 chars):", csvData.substring(0, 50) + "...");
                 const parsedData = parseCSV(csvData);
                 if (!parsedData) {
                     return;
                 }
 
                 database = parsedData;
-                console.log("fetchDataFromGoogleSheet() - DEBUG: Data loaded into database. Item count:", database.length);
 
                 searchButton.disabled = false;
                 viewDataButton.disabled = false;
                 alert('Data loaded from Google Sheet!');
-                 console.log("fetchDataFromGoogleSheet() - END: Data loading process successful.");
 
 
             } catch (error) {
-                console.error("fetchDataFromGoogleSheet() - ERROR: Error during Google Sheet data fetch or processing:", error);
+                console.error("Error fetching or processing Google Sheet data:", error);
                 alert('Failed to load data from Google Sheet. Please check console for details.');
             }
         }
@@ -463,13 +449,13 @@
             dateInput.placeholder = 'Expiry Date (dd/mm/yyyy)'; // Updated placeholder
 
             // Event listener to format date to dd/mm/yyyy for DISPLAY on change
-            dateInput.addEventListener('change', (e) => {
-                if (e.target.value) {
-                    const selectedDate = new Date(e.target.value);
+            dateInput.addEventListener('change', function(e) { // Changed to standard function for 'this' context
+                if (this.value) { // Use 'this' to refer to dateInput
+                    const selectedDate = new Date(this.value); // Use 'this'
                     const day = String(selectedDate.getDate()).padStart(2, '0');
                     const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
                     const year = selectedDate.getFullYear();
-                    e.target.value = `${day}/${month}/${year}`; // Format for display (dd/mm/yyyy)
+                    this.value = `${day}/${month}/${year}`; // Format for display (dd/mm/yyyy) and set back to input
                 }
             });
 
@@ -662,7 +648,7 @@
                     headerCell.textContent = header;
                     headerRow.appendChild(headerCell);
                 });
-                tableHead.appendChild(headerRow);
+                tableHead.appendChild(headerRow)
 
                 enteredRecords.forEach(record => {
                     const row = document.createElement('tr');
