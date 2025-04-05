@@ -344,7 +344,7 @@
 
 
             for (let i = 1; i < lines.length; i++) {
-                const values = lines[i].split(',').map(value => value.trim());
+                const values = lines[i].split('\n').map(value => value.trim());
                 if (values.length === headers.length) {
                     const item = {};
                     for (let j = 0; j < headers.length; j++) {
@@ -445,7 +445,7 @@
             const entryDiv = document.createElement('div');
 
             const dateInput = document.createElement('input');
-            dateInput.type = 'text'; // Changed back to text for manual dd/mm/yyyy input
+            dateInput.type = 'text';
             dateInput.placeholder = 'Expiry Date (dd/mm/yyyy)';
             dateInput.addEventListener('input', (e) => {
               let value = e.target.value.replace(/[^0-9]/g, '');
@@ -545,7 +545,7 @@
             }
 
 
-               record[`expiryDate${count}`] = dateInput.value; // Save directly as dd/mm/yyyy
+               record[`expiryDate${count}`] = dateInput.value;
                record[`quantity${count}`] = parseInt(quantityInput.value, 10);
              count++;
            });
@@ -619,60 +619,44 @@
            }
        }
 
+        // Define the desired header order here
+        const orderedHeaders = ["barcode", "code", "name", "unit", "supplier name", "supplier code", "status", "recordTime", "expiryDate1", "quantity1", "recordTime"];
 
 
            async function renderEnteredRecords() {
             const tableHead = recordTable.querySelector('thead');
-                const tableBody = recordTable.querySelector('tbody');
+            const tableBody = recordTable.querySelector('tbody');
+
+            tableHead.innerHTML = '';
+            tableBody.innerHTML = '';
+
+            try {
+                const snapshot = await expiryRecordsCollection.get();
+                enteredRecords = snapshot.docs.map(doc => doc.data());
+
+                const headerRow = document.createElement('tr');
+                orderedHeaders.forEach(header => { // Use orderedHeaders array
+                    const headerCell = document.createElement('th');
+                    headerCell.textContent = header;
+                    headerRow.appendChild(headerCell);
+                });
+                tableHead.appendChild(headerRow);
+
+                enteredRecords.forEach(record => {
+                    const row = document.createElement('tr');
+                    orderedHeaders.forEach(header => { // Use orderedHeaders array for data cells too
+                        const cell = document.createElement('td');
+                        cell.textContent = record[header] || ''; // Get data based on ordered header
+                        row.appendChild(cell);
+                    });
+                    tableBody.appendChild(row);
+                });
 
 
-                tableHead.innerHTML = '';
-                tableBody.innerHTML = '';
-
-                try {
-                    const snapshot = await expiryRecordsCollection.get();
-                    enteredRecords = snapshot.docs.map(doc => doc.data());
-
-
-
-                     const allHeaders = new Set();
-                    enteredRecords.forEach(record => {
-                       for (const key in record) {
-                         allHeaders.add(key);
-                        }
-                      });
-                      const headerRow = document.createElement('tr');
-                       allHeaders.forEach(header => {
-                       const headerCell = document.createElement('th');
-                       headerCell.textContent = header;
-                      headerRow.appendChild(headerCell);
-                     });
-
-                      const recordTimeHeader = document.createElement('th');
-                      recordTimeHeader.textContent = "Recording Time";
-                      headerRow.appendChild(recordTimeHeader);
-
-                     tableHead.appendChild(headerRow)
-
-                  enteredRecords.forEach(record => {
-                      const row = document.createElement('tr');
-                      allHeaders.forEach(key => {
-                         const cell = document.createElement('td');
-                           cell.textContent = record[key] || '';
-                           row.appendChild(cell);
-                      });
-                       const recordTimeCell = document.createElement('td');
-                        recordTimeCell.textContent = record.recordTime || '';
-                         row.appendChild(recordTimeCell);
-
-                       tableBody.appendChild(row);
-               });
-
-
-                } catch (error) {
-                    console.error("Error fetching expiry records from Firebase:", error);
-                    alert('Failed to load saved records. Check console for details.');
-                }
+            } catch (error) {
+                console.error("Error fetching expiry records from Firebase:", error);
+                alert('Failed to load saved records. Check console for details.');
+            }
          }
 
         async function renderDataList(){
