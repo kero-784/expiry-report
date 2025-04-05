@@ -351,7 +351,7 @@
 
 
             for (let i = 1; i < lines.length; i++) {
-                const values = lines[i].split(',').map(value => value.trim());
+                const values = lines[i].split('\n').map(value => value.trim());
                 if (values.length === headers.length) {
                     const item = {};
                     for (let j = 0; j < headers.length; j++) {
@@ -460,7 +460,7 @@
 
             const dateInput = document.createElement('input');
             dateInput.type = 'date'; // Back to date input for pop-up calendar
-            dateInput.placeholder = 'Expiry Date';
+            dateInput.placeholder = 'Expiry Date (dd/mm/yyyy)'; // Updated placeholder
 
             // Event listener to format date to dd/mm/yyyy for DISPLAY on change
             dateInput.addEventListener('change', (e) => {
@@ -558,7 +558,7 @@
                const formattedDateForSave = `${day}/${month}/${year}`; // Format for saving dd/mm/yyyy
 
 
-               record[`expiryDate${count}`] = formattedDateForSave;
+               record[`expiryDate${count}`] = formattedDateForSave; // Save as dd/mm/yyyy
                record[`quantity${count}`] = parseInt(quantityInput.value, 10);
              count++;
            });
