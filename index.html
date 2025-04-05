@@ -257,7 +257,7 @@
     <script>
          // Firebase Configuration
         const firebaseConfig = {
-          apiKey: "YOUR_API_KEY", // <---- REPLACE WITH YOUR ACTUAL API KEY FROM FIREBASE CONSOLE
+          apiKey: "AIzaSyCOODiDUvRq7EaOZtmK7C82dAGCtCjEGBI",
           authDomain: "expiry-record.firebaseapp.com",
           projectId: "expiry-record",
           storageBucket: "expiry-record.firebasestorage.app",
@@ -454,17 +454,30 @@
             const entryDiv = document.createElement('div');
 
             const dateInput = document.createElement('input');
-            dateInput.type = 'date'; // Changed to type="date"
-            dateInput.placeholder = 'Expiry Date'; // Placeholder is less relevant for date picker
+            dateInput.type = 'date';
+            dateInput.placeholder = 'Expiry Date';
 
-            // Event listener to format date to dd/mm/yyyy on blur (when user finishes selecting date)
+            // Event listener to format date to dd/mm/yyyy for DISPLAY only on blur
             dateInput.addEventListener('blur', (e) => {
-                if (e.target.value) { // Check if a date is selected
-                    const selectedDate = new Date(e.target.value); // Date object from yyyy-mm-dd
+                if (e.target.value) {
+                    const selectedDate = new Date(e.target.value);
                     const day = String(selectedDate.getDate()).padStart(2, '0');
                     const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
                     const year = selectedDate.getFullYear();
-                    e.target.value = `${day}/${month}/${year}`; // Format to dd/mm/yyyy for display and saving
+                    e.target.value = `${day}/${month}/${year}`; // Format for display (dd/mm/yyyy)
+                }
+            });
+
+            // Optional: Input listener to revert to yyyy-MM-dd when focusing for internal consistency (less important for this fix)
+            dateInput.addEventListener('focus', (e) => {
+                if (e.target.value) {
+                    const parts = e.target.value.split('/');
+                    if (parts.length === 3) {
+                        const day = parts[0];
+                        const month = parts[1];
+                        const year = parts[2];
+                        e.target.value = `${year}-${month}-${day}`; // Revert to yyyy-MM-dd for internal format (optional)
+                    }
                 }
             });
 
@@ -536,8 +549,14 @@
               return;
             }
 
-               const formattedDate = dateInput.value; // Date is already formatted in blur event
-               record[`expiryDate${count}`] = formattedDate;
+               const yyyyMmDdDate = dateInput.value; // Get date in yyyy-MM-dd format
+               const selectedDateForSave = new Date(yyyyMmDdDate); // Create Date object for formatting
+               const day = String(selectedDateForSave.getDate()).padStart(2, '0');
+               const month = String(selectedDateForSave.getMonth() + 1).padStart(2, '0');
+               const year = selectedDateForSave.getFullYear();
+               const formattedDateForSave = `${day}/${month}/${year}`; // Format for saving dd/mm/yyyy
+
+               record[`expiryDate${count}`] = formattedDateForSave; // Save in dd/mm/yyyy format
                record[`quantity${count}`] = parseInt(quantityInput.value, 10);
              count++;
            });
@@ -546,10 +565,10 @@
            try {
                await expiryRecordsCollection.add(record); // Add new expiry record to Firebase
                alert('Expiry data saved successfully!');
-               renderEnteredRecords(); // Refresh displayed records
+               renderEnteredRecords();
                clearFields();
-                searchBarcodeInput.value = ''; // Clear the search input
-                  searchResultTable.style.display = 'none';//Clear the search result table
+                searchBarcodeInput.value = '';
+                  searchResultTable.style.display = 'none';
 
            } catch (error) {
                console.error("Error saving expiry data to Firebase:", error);
