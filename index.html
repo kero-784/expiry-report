@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventory Manager</title>
-    <link rel="icon" href="favicon.png" type="image/png"> <!-- Favicon added here -->
+    <link rel="icon" href="favicon.png" type="image/png">
     <style>
         body {
             font-family: sans-serif;
@@ -28,17 +28,30 @@
         }
         button {
             margin: 5px;
-            padding: 10px 15px;
+            padding: 12px 20px; /* Slightly increased padding */
             cursor: pointer;
-            background-color: #4CAF50;
+            background-color: #6772e5; /* Primary button color - blue/purple */
             color: white;
             border: none;
-            border-radius: 4px;
-             font-size: 1em;
-             padding: 12px 20px;
+            border-radius: 6px; /* Slightly more rounded corners */
+            font-size: 1em;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease; /* Smooth transitions */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15); /* Subtle shadow */
         }
 
-        input[type="text"], input[type="number"], input[type="date"] { /* Added input[type="date"] */
+        button:hover {
+            background-color: #5a62c4; /* Darker shade on hover */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Increased shadow on hover */
+            transform: translateY(-1px); /* Slight lift on hover */
+        }
+
+        button:active {
+            background-color: #4e55a2; /* Even darker shade when pressed */
+            transform: scale(0.98); /* Scale down slightly when pressed */
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1); /* Reduced shadow when pressed */
+        }
+
+        input[type="text"], input[type="number"], input[type="date"] {
             padding: 8px;
             margin: 5px;
             border: 1px solid #ccc;
@@ -64,9 +77,29 @@
             background-color: #f2f2f2;
         }
          .remove-button {
-            background-color: #f44336;
+            background-color: #ff6b6b; /* Remove button color - orange/red */
             color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
         }
+
+        .remove-button:hover {
+            background-color: #f44336; /* Darker red on hover */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transform: translateY(-1px);
+        }
+
+        .remove-button:active {
+            background-color: #d1382e; /* Even darker red when pressed */
+            transform: scale(0.98);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
          #dataPopup {
             display: none;
             position: fixed;
@@ -128,10 +161,14 @@
         /* Remove hover effects on touch devices */
         @media (pointer: coarse) {
            button:hover {
-            background-color: #4CAF50;
+            background-color: #6772e5; /* Keep base color on touch hover for consistency */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15); /* Keep base shadow */
+            transform: translateY(0); /* Remove lift on touch hover */
           }
           .remove-button:hover {
-              background-color: #f44336;
+              background-color: #ff6b6b; /* Keep base color on touch hover */
+              box-shadow: 0 2px 4px rgba(0,0,0,0.15); /* Keep base shadow */
+              transform: translateY(0); /* Remove lift on touch hover */
           }
         }
          /* Adjust styles for smaller screens */
@@ -144,7 +181,7 @@
             padding: 10px 16px;
             margin: 3px;
           }
-            input[type="text"], input[type="number"], input[type="date"] { /* Added input[type="date"] */
+            input[type="text"], input[type="number"], input[type="date"] {
                  font-size: 0.9em;
                  padding: 6px;
             }
