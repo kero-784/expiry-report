@@ -457,27 +457,14 @@
             dateInput.type = 'date';
             dateInput.placeholder = 'Expiry Date';
 
-            // Event listener to format date to dd/mm/yyyy for DISPLAY only on blur
-            dateInput.addEventListener('blur', (e) => {
+            // Event listener to format date to dd/mm/yyyy for DISPLAY only on change
+            dateInput.addEventListener('change', (e) => {
                 if (e.target.value) {
                     const selectedDate = new Date(e.target.value);
                     const day = String(selectedDate.getDate()).padStart(2, '0');
                     const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
                     const year = selectedDate.getFullYear();
                     e.target.value = `${day}/${month}/${year}`; // Format for display (dd/mm/yyyy)
-                }
-            });
-
-            // Optional: Input listener to revert to yyyy-MM-dd when focusing for internal consistency (less important for this fix)
-            dateInput.addEventListener('focus', (e) => {
-                if (e.target.value) {
-                    const parts = e.target.value.split('/');
-                    if (parts.length === 3) {
-                        const day = parts[0];
-                        const month = parts[1];
-                        const year = parts[2];
-                        e.target.value = `${year}-${month}-${day}`; // Revert to yyyy-MM-dd for internal format (optional)
-                    }
                 }
             });
 
@@ -556,15 +543,11 @@
                const year = selectedDateForSave.getFullYear();
                const formattedDateForSave = `${day}/${month}/${year}`; // Format for saving dd/mm/yyyy
 
-               console.log("Date Input Value (yyyy-MM-dd):", yyyyMmDdDate); // Debugging Log
-               console.log("Formatted Date for Save (dd/mm/yyyy):", formattedDateForSave); // Debugging Log
 
                record[`expiryDate${count}`] = formattedDateForSave; // Save in dd/mm/yyyy format
                record[`quantity${count}`] = parseInt(quantityInput.value, 10);
              count++;
            });
-
-            console.log("Record to be saved:", record); // Debugging Log
 
 
            try {
@@ -645,12 +628,10 @@
                 // Clear existing table headers and body
                 tableHead.innerHTML = '';
                 tableBody.innerHTML = '';
-                console.log("Fetching expiry records from Firebase..."); // Debugging Log
 
                 try {
                     const snapshot = await expiryRecordsCollection.get();
                     enteredRecords = snapshot.docs.map(doc => doc.data());
-                    console.log("Fetched expiry records:", enteredRecords); // Debugging Log
 
 
                      // Extract all unique headers from the data
