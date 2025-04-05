@@ -431,16 +431,15 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <script>
-         // Firebase configuration - REPLACE WITH YOUR OWN CONFIG
+         // Firebase Configuration
         const firebaseConfig = {
-          apiKey: "YOUR_API_KEY",
-          authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-          databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-          projectId: "YOUR_PROJECT_ID",
-          storageBucket: "YOUR_PROJECT_ID.appspot.com",
-          messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-          appId: "YOUR_APP_ID",
-          measurementId: "YOUR_MEASUREMENT_ID"
+          apiKey: "AIzaSyCOODiDUvRq7EaOZtmK7C82dAGCtCjEGBI",
+          authDomain: "expiry-record.firebaseapp.com",
+          projectId: "expiry-record",
+          storageBucket: "expiry-record.firebasestorage.app",
+          messagingSenderId: "457082071077",
+          appId: "1:457082071077:web:9ac6b994b459dbdb29f7cc",
+          measurementId: "G-VKENXVTLB5"
         };
 
         // Initialize Firebase
@@ -455,7 +454,7 @@
         let barcodeHeader = '';
         let nameHeader = '';
         let expiryHeaderCount = 0;
-        const googleSheetCSVUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRBHjQ-Gsb4AFkplCr5sHTme_hAXGzr51-2bhCfrw6rjUaAg5TkRHU8COSYPE9BaA/pub?output=csv";
+        const googleSheetCSVUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQNrRFFRPe_jrOrDZM58gRqxfsA0deD60_q2jkA7XJRRfJQ7IiBdIqNDN7JdMawjw/pub?output=csv";
 
 
         // Get HTML elements
@@ -785,7 +784,7 @@
             }
             searchResultTableHead.appendChild(headerRow)
 
-            searchResultTableBody.innerHTML = '';
+            searchResultTableBody = '';
 
             const row = document.createElement('tr');
             for (const header in headerMap) {
