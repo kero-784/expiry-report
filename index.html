@@ -9,13 +9,357 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet"> <!-- Roboto and Roboto Condensed -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"> <!-- Material Icons -->
     <style>
-        /* ... (Your CSS Styles - No changes needed) ... */
+        /* Reset and Global Styles */
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif; /* Primary Android font */
+            background-color: #f3f3f3; /* Light grey background, more Android-like */
+            color: #212121; /* Dark grey text, Material Design primary text */
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        #currentDateDisplay {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            font-size: 0.85em;
+            color: #757575; /* Material Design secondary text color */
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 20px auto;
+            padding: 24px; /* Material Design spacing */
+        }
+
+        h1 {
+            text-align: center;
+            color: #3F51B5; /* Indigo 500 - Material Design primary color */
+            margin-bottom: 24px;
+            font-size: 2rem;
+            font-family: 'Roboto Condensed', sans-serif; /* For headings */
+            font-weight: 700;
+        }
+
+        .database-section-container {
+            background-color: #fff;
+            border-radius: 4px; /* Material Design card corner radius */
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 0 3px 1px -2px rgba(0,0,0,0.12), 0 1px 5px 0 rgba(0,0,0,0.2); /* Material Design card shadow */
+        }
+
+        .database-section-container h2 {
+            font-size: 1.3rem;
+            color: #212121;
+            margin-top: 0;
+            margin-bottom: 16px;
+            font-weight: 500;
+            font-family: 'Roboto Condensed', sans-serif;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 8px;
+        }
+
+        /* Button Styles */
+        button {
+            padding: 10px 16px;
+            margin: 4px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px; /* Material Design button radius */
+            color: white;
+            background-color: #3F51B5; /* Indigo 500 - Material Design primary color */
+            font-size: 0.9rem;
+            text-transform: uppercase; /* Material Design button text transform */
+            box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 0 3px 1px -2px rgba(0,0,0,0.12), 0 1px 5px 0 rgba(0,0,0,0.2); /* Material Design button shadow */
+            transition: box-shadow 0.3s ease, background-color 0.3s ease;
+            display: flex; /* For icon alignment */
+            align-items: center;
+            justify-content: center; /* Center text and icon */
+            gap: 8px; /* Spacing between icon and text */
+        }
+
+        button:hover {
+            box-shadow: 0 4px 5px 0 rgba(0,0,0,0.25), 0 1px 10px 0 rgba(0,0,0,0.22), 0 2px 4px -1px rgba(0,0,0,0.3); /* Hover shadow */
+            background-color: #303F9F; /* Indigo 700 - Darker shade on hover */
+        }
+
+        button:focus {
+            outline: none; /* Remove default focus outline */
+            box-shadow: 0 0 0 2px rgba(159, 168, 218, 0.5); /* Focus ring */ /* Example focus ring color */
+        }
+
+
+        .secondary-button { /* For less used buttons */
+            background-color: transparent;
+            color: #757575; /* Material Design secondary text color */
+            box-shadow: none;
+            font-size: 0.85rem;
+            padding: 6px 12px; /* Smaller padding */
+        }
+
+        .secondary-button:hover {
+            background-color: rgba(159, 168, 218, 0.1); /* Light background on hover */ /* Example hover background color */
+            color: #3F51B5; /* Primary color on hover */
+            box-shadow: none; /* No shadow on hover for secondary buttons */
+        }
+        .secondary-button:focus {
+            box-shadow: 0 0 0 2px rgba(159, 168, 218, 0.3);
+        }
+
+
+        .remove-button {
+            background-color: #F44336; /* Red 500 - Material Design red */
+        }
+
+        .remove-button:hover {
+            background-color: #D32F2F; /* Red 700 - Darker red on hover */
+        }
+
+        .add-expiry-button-inline {
+            background-color: #FFC107; /* Amber 500 - Material Design amber */
+            color: #212121; /* Dark text for contrast */
+        }
+
+        .add-expiry-button-inline:hover {
+            background-color: #FFB300; /* Amber 700 - Darker amber on hover */
+        }
+
+        .save-expiry-button {
+            background-color: #4CAF50; /* Green 500 - Material Design green */
+        }
+
+        .save-expiry-button:hover {
+            background-color: #388E3C; /* Green 700 - Darker green on hover */
+        }
+
+        /* Icon Styles */
+        .material-icons {
+            vertical-align: middle; /* Align icons with text */
+        }
+
+        /* Input Styles */
+        input[type="text"], input[type="number"] {
+            padding: 12px;
+            margin: 4px;
+            border: 1px solid #BDBDBD; /* Grey 400 - Material Design input border */
+            border-radius: 4px;
+            font-size: 0.9rem;
+            outline: none;
+            box-shadow: none; /* Remove inset shadow */
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus {
+            border-color: #3F51B5; /* Indigo 500 - Primary color on focus */
+            box-shadow: 0 0 0 1px #3F51B5; /* Focus border highlight */
+        }
+
+        input[type="file"] {
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+        }
+
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); /* Lighter table shadow */
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid #e0e0e0; /* Light grey table border */
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            border-bottom: 1px solid #e0e0e0; /* Row separator */
+        }
+
+        th {
+            background-color: #f5f5f5; /* Grey 100 - Lighter header background */
+            color: #757575; /* Secondary text color for headers */
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        tr:nth-child(even) td { /* Optional: Row striping */
+            background-color: #f9f9f9;
+        }
+        tr:last-child td {
+            border-bottom: none; /* Remove border on last row cells */
+        }
+
+        /* Expiry Input Group */
+        .expiry-input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            gap: 8px;
+        }
+
+        /* Popup Styles */
+        #dataPopup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            overflow: auto;
+        }
+
+        #dataPopupContent {
+            background-color: #fff;
+            padding: 32px;
+            border-radius: 4px;
+            box-shadow: 0 9px 46px rgba(0, 0, 0, 0.12), 0 11px 15px -7px rgba(0, 0, 0, 0.2); /* Stronger popup shadow */
+            max-height: 90vh;
+            max-width: 90vw;
+            position: relative;
+        }
+
+        .closePopup {
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #757575;
+            transition: color 0.3s ease;
+        }
+
+        .closePopup:hover {
+            color: #212121;
+        }
+
+        #popupTable th {
+            background-color: #f0f0f0;
+        }
+
+        /* Search Result Table Styles */
+        #searchResultTable {
+            display: none;
+            margin-top: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            border-radius: 4px;
+            background-color: white;
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+        }
+
+        #searchResultTable th, #searchResultTable td {
+            padding: 12px;
+            white-space: nowrap;
+        }
+
+        #searchResultTable th {
+            background-color: #f5f5f5;
+        }
+        #searchResultTable tr:nth-child(even) td { /* Optional: Row striping */
+            background-color: #f9f9f9;
+        }
+        #searchResultTable tr:last-child td {
+            border-bottom: none; /* Remove border on last row cells */
+        }
+
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+                margin: 16px auto;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+                margin-bottom: 16px;
+            }
+
+            .database-section-container {
+                padding: 16px;
+                margin-bottom: 12px;
+            }
+
+            .database-section-container h2 {
+                font-size: 1.2rem;
+                margin-bottom: 12px;
+            }
+
+            button, input[type="text"], input[type="number"] {
+                padding: 8px 12px;
+                font-size: 0.85rem;
+            }
+
+            th, td {
+                padding: 10px;
+                font-size: 0.8rem;
+            }
+
+            #currentDateDisplay {
+                top: 12px;
+                right: 12px;
+                font-size: 0.8em;
+            }
+
+             .expiry-input-group {
+                flex-direction: column; /* Stack inputs on smaller screens */
+                align-items: stretch; /* Make inputs full width */
+                gap: 8px;
+            }
+            button {
+                font-size: 0.85rem; /* Adjust button font size for smaller screens */
+                padding: 8px 12px;
+            }
+             .secondary-button {
+                font-size: 0.8rem; /* Adjust secondary button font size for smaller screens */
+                padding: 5px 10px;
+            }
+
+
+        }
+
+        @media (max-width: 576px) {
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: 12px;
+            }
+
+            .database-section-container h2 {
+                font-size: 1.1rem;
+                margin-bottom: 10px;
+            }
+
+            button, input[type="text"], input[type="number"] {
+                padding: 7px 10px;
+                font-size: 0.8rem;
+                margin: 3px;
+            }
+             th, td {
+                padding: 8px;
+                font-size: 0.75rem;
+            }
+            #currentDateDisplay {
+                top: 8px;
+                right: 8px;
+                font-size: 0.75em;
+            }
+             .container {
+                padding: 12px;
+                margin: 12px auto;
+            }
+        }
     </style>
-
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
 </head>
 <body>
     <div id="currentDateDisplay"></div>
@@ -24,7 +368,8 @@
 
         <section class="database-section-container">
             <h2>Database Management</h2>
-            <p>Data is automatically loaded from Google Sheets.</p>
+            <input type="file" id="fileInput" accept=".xlsx, .xls" style="display:none">
+            <button id="importButton"><span class="material-icons">file_upload</span>Import Data</button>
             <button id="viewDataButton" class="secondary-button" disabled><span class="material-icons">visibility</span>View Data</button>
             <button id="clearDatabaseButton" class="secondary-button" disabled><span class="material-icons">delete_sweep</span>Clear DB</button>
             <button id="exportButton" class="secondary-button" disabled><span class="material-icons">file_download</span>Export Data</button>
@@ -82,9 +427,11 @@
         </div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <script>
-        // Firebase configuration - REPLACE WITH YOUR OWN CONFIG
+         // Firebase configuration - REPLACE WITH YOUR OWN CONFIG
         const firebaseConfig = {
           apiKey: "YOUR_API_KEY",
           authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
@@ -100,66 +447,192 @@
         firebase.initializeApp(firebaseConfig);
         const databaseFirebase = firebase.database().ref(); // Get reference to the database
 
-        // Global variables
-        let database = []; // Will store data fetched from Firebase
+         // Global variables
+        let database = []; // Will store data fetched from Firebase AND Excel
         let currentItem = null;
         let enteredRecords = [];
-        let headerMap = {};
+        let headerMap = {}; // Map to store column index by header
         let barcodeHeader = '';
         let nameHeader = '';
+        let expiryHeaderCount = 0;
         const googleSheetCSVUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRBHjQ-Gsb4AFkplCr5sHTme_hAXGzr51-2bhCfrw6rjUaAg5TkRHU8COSYPE9BaA/pub?output=csv";
 
-        // Get HTML elements (No changes needed here)
+
+        // Get HTML elements
+        const fileInput = document.getElementById('fileInput');
+        const importButton = document.getElementById('importButton');
         const searchBarcodeInput = document.getElementById('searchBarcodeInput');
         const searchButton = document.getElementById('searchButton');
-        const searchResultTable = document.getElementById('searchResultTable');
-        const searchResultTableBody = document.getElementById('searchResultTableBody')
+         const searchResultTable = document.getElementById('searchResultTable');
+         const searchResultTableBody = document.getElementById('searchResultTableBody')
         const expiryInputs = document.getElementById('expiryInputs');
         const addExpiryButton = document.getElementById('addExpiryButton');
         const saveButton = document.getElementById('saveButton');
         const clearFieldsButton = document.getElementById('clearFieldsButton');
         const recordTableBody = document.getElementById('recordTableBody');
         const exportButton = document.getElementById('exportButton');
-        const viewDataButton = document.getElementById('viewDataButton');
+         const viewDataButton = document.getElementById('viewDataButton');
         const clearDatabaseButton = document.getElementById('clearDatabaseButton');
         const dataPopup = document.getElementById('dataPopup');
         const dataPopupContent = document.getElementById('dataPopupContent');
-        const currentDateDisplay = document.getElementById('currentDateDisplay');
+          const currentDateDisplay = document.getElementById('currentDateDisplay');
         const closePopup = document.querySelector('.closePopup');
 
-        function getCurrentDateTime(){
-            const now = new Date();
+          function getCurrentDateTime(){
+              const now = new Date();
             const day = String(now.getDate()).padStart(2, '0');
             const month = String(now.getMonth() + 1).padStart(2, '0');
             const year = now.getFullYear();
             const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
+             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
 
-            return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`
-        }
+              return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`
+          }
 
-        // Load entered records from local storage (No changes needed here)
-        function loadEnteredRecordsFromLocalStorage() {
-            const storedEnteredRecords = localStorage.getItem('enteredRecords');
-            const storedCurrentDate = localStorage.getItem('currentDate');
 
-            if (storedEnteredRecords) enteredRecords = JSON.parse(storedEnteredRecords);
-            if(!storedCurrentDate){
-                localStorage.setItem('currentDate', getCurrentDateTime());
-                storedCurrentDate = localStorage.getItem('currentDate')
+        // Load data from local storage (for entered records only)
+        function loadDataFromLocalStorage() {
+             try {
+                const storedEnteredRecords = localStorage.getItem('enteredRecords');
+                const storedHeaderMap = localStorage.getItem('headerMap'); //Potentially used if excel import was used before
+                const storedBarcodeHeader = localStorage.getItem('barcodeHeader'); //Potentially used if excel import was used before
+                const storedNameHeader = localStorage.getItem('nameHeader'); //Potentially used if excel import was used before
+                let storedCurrentDate = localStorage.getItem('currentDate');
+
+
+                if (storedEnteredRecords) enteredRecords = JSON.parse(storedEnteredRecords);
+                if (storedHeaderMap) headerMap = JSON.parse(storedHeaderMap);
+                if (storedBarcodeHeader) barcodeHeader = storedBarcodeHeader;
+                if(storedNameHeader) nameHeader = storedNameHeader;
+                if(!storedCurrentDate){
+                        localStorage.setItem('currentDate', getCurrentDateTime());
+                        storedCurrentDate = localStorage.getItem('currentDate')
+                    }
+
+                currentDateDisplay.textContent = `Current Date: ${storedCurrentDate}`;
+                renderEnteredRecords();
+
+                if(database.length >0){ //Keep buttons enabled if data is loaded from ANY source (Excel or Google Sheet)
+                    searchButton.disabled = false;
+                     viewDataButton.disabled = false;
+                     clearDatabaseButton.disabled = false;
+                     exportButton.disabled = false;
+                 }
+             } catch (error) {
+                console.error("Error loading data from local storage:", error);
+                alert("Error loading data from local storage. Check console for details.");
+             }
+         }
+
+        loadDataFromLocalStorage();
+
+
+        // Import Functionality (Phase 2) - RE-ENABLED Excel Import
+        importButton.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', handleFileImport);
+
+        async function handleFileImport(event) {
+             try {
+                console.log("Excel file import started...");
+                const file = event.target.files[0];
+                if (!file) {
+                    alert('No file selected!');
+                    return;
+                }
+
+                 const reader = new FileReader();
+                 reader.onload = (e) => {
+                    try {
+                        console.log("Reading Excel file...");
+                        const data = new Uint8Array(e.target.result);
+                        let workbook;
+                        try{
+                            workbook = XLSX.read(data, { type: 'array' });
+                        }catch(err){
+                            console.error("Error parsing Excel file:", err);
+                            alert('Error parsing Excel file, please check the file format!');
+                            return;
+                        }
+                        const sheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[sheetName];
+                        const range = XLSX.utils.decode_range(worksheet['!ref']);
+                         if(range.e.r <1){
+                            alert("File contains no data!");
+                            console.log("Excel file is empty.");
+                            return;
+                        }
+                        const excelData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                        if (!excelData || excelData.length === 0) {
+                            alert('File is empty or unreadable!');
+                            console.log("Excel data is empty or unreadable after parsing.");
+                            return;
+                        }
+
+                        const headers = excelData[0];
+                        headers.forEach((header, index) => {
+                            if(header && header.toLowerCase().includes('barcode')) {
+                              barcodeHeader = header;
+                            }
+                            if(header && header.toLowerCase().includes('name')){
+                              nameHeader = header;
+                            }
+                             headerMap[header] = index;
+                        });
+
+                         if (!barcodeHeader) {
+                             alert("No 'barcode' column found in the file.");
+                             console.log("No 'barcode' column found in Excel file.");
+                             return;
+                         }
+                         if (!nameHeader){
+                             alert("No 'name' column found in the file.");
+                             console.log("No 'name' column found in Excel file.");
+                             return;
+                         }
+
+                        database = excelData.slice(1);
+
+                        // Optionally, you could also save Excel data to Firebase here if needed
+                        // For now, we'll just use Firebase for Google Sheet data
+
+                        localStorage.setItem('database', JSON.stringify(database)); //Keep excel data in local storage as well (original functionality)
+                         localStorage.setItem('headerMap', JSON.stringify(headerMap));
+                         localStorage.setItem('barcodeHeader', barcodeHeader);
+                          localStorage.setItem('nameHeader', nameHeader);
+                        alert('Data imported successfully from Excel!');
+                        console.log("Excel data imported and stored in local storage.");
+                         renderEnteredRecords();
+                       viewDataButton.disabled = false;
+                       searchButton.disabled = false;
+                       clearDatabaseButton.disabled = false;
+                       exportButton.disabled = false;
+                    } catch (parseError) {
+                       console.error("Error parsing Excel data:", parseError);
+                        alert('Error processing Excel data. Please check file content and format.');
+                    }
+                 };
+
+                 reader.onerror = (readError) =>{
+                     console.error("Error reading Excel file:", readError);
+                        alert('Error reading Excel file. Please try again or select a different file.');
+                };
+
+                 reader.readAsArrayBuffer(file);
+            } catch (error) {
+                console.error("Unexpected error during Excel import:", error);
+                alert('An unexpected error occurred during file import. Check console for details.');
             }
-
-            currentDateDisplay.textContent = `Current Date: ${storedCurrentDate}`;
-            renderEnteredRecords();
         }
 
-        loadEnteredRecordsFromLocalStorage();
 
-
-        // Function to fetch data from Google Sheet and load into Firebase and local database
+         // Function to fetch data from Google Sheet and load into Firebase and local database
         async function loadDatabaseFromGoogleSheet() {
             try {
+                console.log("Loading data from Google Sheet started...");
                 const response = await fetch(googleSheetCSVUrl);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -174,23 +647,25 @@
                             barcodeHeader = header;
                         }
                         if(header && header.toLowerCase().includes('name')){
-                            nameHeader = header
+                            nameHeader = header;
                         }
                         headerMap[header] = index;
                     });
 
                     if (!barcodeHeader) {
-                        alert("No 'barcode' column found in the Google Sheet.")
+                        alert("No 'barcode' column found in the Google Sheet.");
+                        console.log("No 'barcode' column found in Google Sheet.");
                         return;
                     }
                     if (!nameHeader){
                         alert("No 'name' column found in the Google Sheet.");
+                        console.log("No 'name' column found in Google Sheet.");
                         return;
                     }
 
                     // Store data in Firebase Realtime Database, using barcode as key
                     const itemsRef = databaseFirebase.child('inventoryItems'); // Path in Firebase
-                    const databaseArray = [];
+                    const googleSheetDatabaseArray = []; //Separate array for google sheet data
                     for (let i = 1; i < parsedData.length; i++) { // Start from 1 to skip header row
                         const itemData = {};
                         const row = parsedData[i];
@@ -202,26 +677,45 @@
                             }
                         });
                         if(barcodeValue){
-                            await itemsRef.child(barcodeValue).set(itemData); // Set data in Firebase
-                            databaseArray.push(itemData); // Also keep a local array for search
+                            try {
+                                await itemsRef.child(barcodeValue).set(itemData); // Set data in Firebase
+                            } catch (firebaseError) {
+                                console.error("Error writing to Firebase:", firebaseError);
+                                alert("Error writing data to Firebase. Check console for details. Data loading from Google Sheet might be partially successful.");
+                                return; // Stop processing further if Firebase write fails
+                            }
+                            googleSheetDatabaseArray.push(itemData); // Also keep a local array for search
                         }
                     }
 
-                    database = databaseArray; // Update local database array
+                    //Merge Google Sheet data with existing database (Excel or previous Google Sheet load)
+                    //Prioritize Google Sheet data in case of barcode conflicts (you can adjust this logic)
+                    const googleSheetBarcodeSet = new Set(googleSheetDatabaseArray.map(item => item[barcodeHeader]));
+                    database = database.filter(item => !googleSheetBarcodeSet.has(item[barcodeHeader])).concat(googleSheetDatabaseArray);
+
+
+                    localStorage.setItem('database', JSON.stringify(database)); // Update local storage with merged data
+                    localStorage.setItem('headerMap', JSON.stringify(headerMap)); //Ensure header map is updated if Google Sheet headers are different
+                    localStorage.setItem('barcodeHeader', barcodeHeader);
+                    localStorage.setItem('nameHeader', nameHeader);
+
+
                     alert('Data loaded from Google Sheets successfully!');
+                    console.log("Data loaded from Google Sheets and Firebase updated.");
                     enableButtons();
 
                 } else {
                     alert('No data found in Google Sheet or error parsing CSV.');
+                    console.log("No data or error parsing CSV from Google Sheet.");
                 }
             } catch (error) {
                 console.error("Error loading data from Google Sheet:", error);
-                alert('Failed to load data from Google Sheets. Please check the URL and your internet connection.');
+                alert('Failed to load data from Google Sheets. Please check the URL, your internet connection and console for details.');
             }
         }
 
 
-        // CSV Parsing function
+        // CSV Parsing function (No changes needed)
         function parseCSV(csvText) {
             const lines = csvText.trim().split('\n');
             if (lines.length === 0) return [];
@@ -249,33 +743,34 @@
         loadDatabaseFromGoogleSheet();
 
 
-        // Search Functionality (Phase 3) - Modified to search in local database array
+        // Search Functionality (Phase 3) - Modified to search in local database array (No changes needed)
         searchButton.addEventListener('click', () => {
             const barcode = searchBarcodeInput.value.trim();
 
             if(!barcode){
-                alert('Please enter a barcode to search!')
+                alert('Please enter a barcode to search!');
                 return;
             }
             if(database.length === 0){
-                alert('No data loaded from Google Sheets yet.')
+                alert('No data loaded yet. Please import Excel or wait for Google Sheet to load.');
                 return;
             }
 
             const foundItem = database.find(item => item[barcodeHeader] === barcode);
-
 
             if (foundItem) {
                 currentItem = foundItem;
                 renderSearchResultTable(foundItem);
                 addExpiryEntry();
                 saveButton.disabled = false;
+                console.log("Item found with barcode:", barcode, foundItem);
             } else {
-                alert("No item found with this barcode!")
+                alert("No item found with this barcode!");
                 currentItem = null;
                 searchResultTable.style.display = 'none';
                 expiryInputs.innerHTML = '';
                 saveButton.disabled = true;
+                console.log("Item not found with barcode:", barcode);
             }
         });
 
@@ -448,6 +943,7 @@
             clearFields();
             searchBarcodeInput.value = ''; // Clear the search input
             searchResultTable.style.display = 'none';//Clear the search result table
+            console.log("Expiry data saved for item:", itemData[nameHeader] || itemData[barcodeHeader]);
         });
 
         // Clear Functions (Phase 6) - No changes needed
@@ -458,35 +954,39 @@
         }
         clearDatabaseButton.addEventListener('click', clearDatabase);
 
-        function clearDatabase() {
-            //Clear Firebase Database
-            const itemsRef = firebase.database().ref('inventoryItems');
-            itemsRef.remove()
-            .then(() => {
-                database = []; // Clear local database array
-                currentItem = null;
-                enteredRecords = [];
-                headerMap = {};
-                barcodeHeader = '';
-                nameHeader = '';
+        async function clearDatabase() {
+           try {
+               database = []; // Clear local database array
+               currentItem = null;
+               enteredRecords = [];
+               headerMap = {};
+               barcodeHeader = '';
+               nameHeader = '';
+               expiryHeaderCount = 0;
 
-                recordTableBody.innerHTML = '';
-                searchBarcodeInput.value = '';
-                clearFields();
-                saveButton.disabled = true;
-                viewDataButton.disabled = true;
-                searchButton.disabled = true;
-                clearDatabaseButton.disabled = true;
-                exportButton.disabled = true;
-                searchResultTable.style.display = 'none';
-                localStorage.clear();
-                alert("Database has been cleared!");
-                loadDatabaseFromGoogleSheet(); //Reload data from google sheet
-            }).catch((error) => {
-                console.error("Error clearing Firebase Database:", error);
-                alert("Error clearing online database. Please check console.");
-            });
-        }
+               recordTableBody.innerHTML = '';
+               searchBarcodeInput.value = '';
+               clearFields();
+               saveButton.disabled = true;
+               viewDataButton.disabled = true;
+               searchButton.disabled = true;
+               clearDatabaseButton.disabled = true;
+               exportButton.disabled = true;
+               searchResultTable.style.display = 'none';
+               localStorage.clear();
+
+               // Optionally clear Firebase Database as well if you want to completely reset online data
+               const itemsRef = firebase.database().ref('inventoryItems');
+               await itemsRef.remove(); // Use await for promise resolution
+               console.log("Firebase online data cleared.");
+               alert("Database and Firebase online data cleared!");
+               loadDatabaseFromGoogleSheet(); // Optionally reload from Google Sheet after clearing Firebase
+           } catch (error) {
+               console.error("Error clearing database:", error);
+               alert("Error clearing database. Local data cleared, but Firebase clear may have failed. Check console.");
+           }
+         alert("Local database has been cleared!");
+       }
 
 
         // Render Table & List Box (Phase 7) - No changes needed
@@ -580,6 +1080,7 @@
                 localStorage.setItem('enteredRecords', JSON.stringify(enteredRecords));
                 renderEnteredRecords();
                 alert('Data exported successfully and records cleared!');
+                console.log("Entered records exported to Excel and cleared.");
             } catch (error) {
                 console.error("Error during export:", error);
                 alert('An error occurred while exporting the data.');
@@ -588,7 +1089,7 @@
 
         viewDataButton.addEventListener('click', () =>{
             if(database.length === 0){
-                alert("Data is still loading from Google Sheets, please wait.")
+                alert("Data is still loading, or no data has been imported yet.")
                 return;
             }
             renderDataList();
