@@ -556,10 +556,15 @@
                const year = selectedDateForSave.getFullYear();
                const formattedDateForSave = `${day}/${month}/${year}`; // Format for saving dd/mm/yyyy
 
+               console.log("Date Input Value (yyyy-MM-dd):", yyyyMmDdDate); // Debugging Log
+               console.log("Formatted Date for Save (dd/mm/yyyy):", formattedDateForSave); // Debugging Log
+
                record[`expiryDate${count}`] = formattedDateForSave; // Save in dd/mm/yyyy format
                record[`quantity${count}`] = parseInt(quantityInput.value, 10);
              count++;
            });
+
+            console.log("Record to be saved:", record); // Debugging Log
 
 
            try {
@@ -640,10 +645,12 @@
                 // Clear existing table headers and body
                 tableHead.innerHTML = '';
                 tableBody.innerHTML = '';
+                console.log("Fetching expiry records from Firebase..."); // Debugging Log
 
                 try {
                     const snapshot = await expiryRecordsCollection.get();
                     enteredRecords = snapshot.docs.map(doc => doc.data());
+                    console.log("Fetched expiry records:", enteredRecords); // Debugging Log
 
 
                      // Extract all unique headers from the data
