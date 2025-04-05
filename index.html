@@ -5,258 +5,157 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventory Manager</title>
     <style>
-        /* Trendy Styles - Same as before */
         body {
-            font-family: 'Nunito Sans', sans-serif; /* Trendy font */
-            margin: 20px; /* Increased margin for a cleaner look */
-            background-color: #f8f9fa; /* Light, soft background */
-            color: #343a40; /* Darker text for contrast */
-            line-height: 1.6; /* Improved line height for readability */
+            font-family: sans-serif;
+            margin: 10px;
+            background-color: #f0f0f0;
         }
-        @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;700&display=swap'); /* Import Nunito Sans */
-
-        #currentDateDisplay {
+         #currentDateDisplay {
             position: absolute;
-            top: 20px;
-            left: 20px;
-            font-size: 0.9em;
-            color: #6c757d; /* Muted date color */
-        }
-
+            top: 10px;
+            left: 10px;
+            font-size: 1em;
+            color: #555;
+          }
         h1 {
             text-align: center;
-            color: #20c997; /* Trendy Teal Accent Color */
-            font-size: 2.2em; /* Larger heading */
-            margin-bottom: 20px; /* Space below heading */
-            letter-spacing: -0.5px; /* Slightly tighter letter spacing */
+            color: #333;
+            font-size: 1.5em;
         }
-
-        .container {
+        .container{
             text-align: center;
-            margin-bottom: 25px; /* Space below container */
         }
-
         button {
-            margin: 8px;
-            padding: 12px 24px; /* Slightly larger buttons */
+            margin: 5px;
+            padding: 10px 15px;
             cursor: pointer;
-            background-color: #20c997; /* Teal button color */
+            background-color: #4CAF50;
             color: white;
             border: none;
-            border-radius: 8px; /* More rounded buttons */
-            font-size: 1em;
-            transition: background-color 0.3s ease; /* Smooth transition for hover effect */
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+            border-radius: 4px;
+             font-size: 1em;
+             padding: 12px 20px;
         }
 
-        button:hover {
-            background-color: #16a085; /* Darker teal on hover */
+        input[type="text"], input[type="number"] {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+             font-size: 1em;
         }
-
-        input[type="text"],
-        input[type="number"],
-        input[type="file"] {
-            padding: 12px; /* Larger input padding */
-            margin: 8px;
-            border: 1px solid #ced4da; /* Light grey border */
-            border-radius: 6px; /* Rounded input corners */
-            font-size: 1em;
-            width: calc(100% - 30px); /* Adjust width for padding and border */
-            max-width: 300px; /* Limit input width */
-            display: inline-block; /* For better alignment */
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1); /* Inset shadow for input fields */
-        }
-
-        input[type="file"] {
-            padding-top: 8px; /* Adjust padding for file input */
-            padding-bottom: 8px;
-        }
-
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 10px;
             background-color: white;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05); /* More pronounced shadow for table */
-            border-radius: 8px; /* Rounded table corners */
-            overflow: hidden; /* Ensures rounded corners are visible */
-            margin-bottom: 20px; /* Space below table */
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+           overflow-x: auto;
         }
-
-        th,
-        td {
-            border: 1px solid #dee2e6; /* Lighter border color for cells */
-            padding: 12px; /* Increased cell padding */
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
             text-align: left;
-            font-size: 0.95em;
-            white-space: nowrap;
+             font-size: 0.9em;
+             white-space: nowrap;
         }
-
         th {
-            background-color: #e9ecef; /* Light grey header background */
-            color: #495057; /* Darker header text */
-            font-weight: 700; /* Bold header text */
-            text-transform: uppercase; /* Uppercase headers for emphasis */
-            letter-spacing: 0.5px; /* Spaced out header letters */
+            background-color: #f2f2f2;
         }
-
-        tbody tr:nth-child(even) {
-            background-color: #f8f9fa; /* Alternate row background */
-        }
-
-        .remove-button {
-            background-color: #dc3545; /* Bootstrap danger color */
+         .remove-button {
+            background-color: #f44336;
             color: white;
         }
-
-        .remove-button:hover {
-            background-color: #c82333; /* Darker red on hover */
-        }
-
-        #dataPopup {
+         #dataPopup {
             display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.6); /* Slightly darker backdrop */
+            background-color: rgba(0, 0, 0, 0.5);
             justify-content: center;
             align-items: center;
-            z-index: 1050; /* Higher z-index for pop-up */
-            overflow: auto; /* Enable scroll if content is long */
+            z-index: 1000;
+           overflow: auto;
         }
-
         #dataPopupContent {
-            background-color: white;
-            padding: 30px; /* More padding inside popup */
-            border-radius: 12px; /* More rounded popup corners */
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); /* Deeper shadow for popup */
-            overflow: auto;
-            max-height: 90vh; /* Slightly taller max height */
-            max-width: 90vw; /* Slightly wider max width */
-            position: relative; /* For close button positioning */
-            animation: fadeIn 0.4s ease-out forwards; /* Fade-in animation */
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            overflow: auto; /* Enable scroll if table overflows */
+            max-height: 80vh; /* Limit maximum height of the popup */
+            max-width: 80vw;
         }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
         .closePopup {
             position: absolute;
-            top: 15px;
-            right: 20px;
-            font-size: 24px; /* Larger close button */
+            top: 10px;
+            right: 15px;
+            font-size: 20px;
             cursor: pointer;
-            color: #6c757d; /* Muted close button color */
-            transition: color 0.2s ease; /* Smooth color transition */
+            color: #666;
         }
-
         .closePopup:hover {
-            color: #343a40; /* Darker on hover */
+            color: #333;
         }
-
         #popupTable {
             width: 100%;
             border-collapse: collapse;
         }
-
         #popupTable th,
         #popupTable td {
-            border: 1px solid #dee2e6;
-            padding: 10px;
+            border: 1px solid #ddd;
+            padding: 8px;
             text-align: left;
         }
-
         #popupTable th {
-            background-color: #e9ecef;
+            background-color: #f2f2f2;
         }
-
         #searchResultTable {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px; /* Space above search result table */
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 10px;
             overflow-x: auto;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08); /* Lighter shadow for search result table */
-            border-radius: 6px;
-            overflow: hidden;
         }
 
-        #searchResultTable th,
-        #searchResultTable td {
-            border: 1px solid #dee2e6;
-            padding: 10px;
-            white-space: nowrap;
+        #searchResultTable th, #searchResultTable td{
+          border: 1px solid #ddd;
+          padding: 8px;
+           white-space: nowrap;
         }
-
         /* Remove hover effects on touch devices */
         @media (pointer: coarse) {
-            button:hover {
-                background-color: #20c997; /* Keep original color on touch devices */
-            }
-
-            .remove-button:hover {
-                background-color: #dc3545; /* Keep original color on touch devices */
-            }
+           button:hover {
+            background-color: #4CAF50;
+          }
+          .remove-button:hover {
+              background-color: #f44336;
+          }
         }
-
-        /* Adjust styles for smaller screens */
+         /* Adjust styles for smaller screens */
         @media (max-width: 768px) {
-            body {
-                margin: 10px; /* Adjust body margin for small screens */
-            }
-
-            #currentDateDisplay {
-                top: 10px;
-                left: 10px;
-                font-size: 0.8em; /* Smaller date on small screens */
-            }
-
             h1 {
-                font-size: 1.8em; /* Smaller heading on small screens */
-                margin-bottom: 15px;
+                font-size: 1.3em;
             }
-
-            button {
-                font-size: 0.9em;
-                padding: 10px 20px;
-                margin: 5px;
+           button {
+            font-size: 0.9em;
+            padding: 10px 16px;
+            margin: 3px;
+          }
+            input[type="text"], input[type="number"] {
+                 font-size: 0.9em;
+                 padding: 6px;
             }
-
-            input[type="text"],
-            input[type="number"],
-            input[type="file"] {
-                font-size: 0.9em;
-                padding: 10px;
-                margin: 5px;
-                max-width: 100%; /* Full width inputs on small screens */
-            }
-
-            table th,
-            table td,
-            #popupTable th,
-            #popupTable td,
-            #searchResultTable th,
-            #searchResultTable td {
-                font-size: 0.85em;
-                padding: 8px;
-            }
-
-            #dataPopupContent {
-                padding: 20px; /* Adjust popup padding on small screens */
-            }
-
-            .closePopup {
-                top: 10px;
-                right: 15px;
-                font-size: 20px; /* Smaller close button on small screens */
-            }
+             table th, table td {
+                font-size: 0.8em;
+                padding: 6px;
+             }
         }
     </style>
-    <!-- No Firebase SDKs anymore -->
-    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+     <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 </head>
 <body>
     <div id="currentDateDisplay"></div>
@@ -264,14 +163,15 @@
 
     <div class="container">
         <input type="file" id="fileInput" accept=".xlsx, .xls" style="display:none">
-        <button id="importButton">Import Data</button>
-        <button id="viewDataButton">View Imported Data</button>
-        <button id="clearDatabaseButton">Clear Data</button> <!-- Changed button text -->
+        <button id="importButton" style="display:none;">Import Data</button>  <!-- Hiding Import Button -->
+        <button id="loadSheetButton">Load Google Sheet Data</button> <!-- Button to load Google Sheet -->
+        <button id="viewDataButton" disabled>View Imported Data</button>
+        <button id="clearDatabaseButton" disabled>Clear Database</button>
         </div>
         <br/>
     <div class="container">
         <input type="text" id="searchBarcodeInput" placeholder="Search by Barcode">
-        <button id="searchButton">Search</button>
+        <button id="searchButton" disabled>Search</button>
     </div>
 
       <table id="searchResultTable" style="display: none;">
@@ -289,41 +189,67 @@
 
     <div class="container">
         <button id="addExpiryButton">Add Expiry</button>
-        <button id="saveButton" disabled>Save Entry</button> <!-- Keep Save button for local use -->
+        <button id="saveButton" disabled>Save Entry</button>
         <button id="clearFieldsButton">Clear Fields</button>
     </div>
 
 
     <br/>
 
+    <table id="recordTable">
+        <thead>
 
-    <!-- Removed recordTable and recordTableBody -->
-
+        </thead>
+        <tbody id="recordTableBody">
+            <!-- Entered records will be displayed here -->
+        </tbody>
+    </table>
 
     <div class="container">
-     <button id="exportButton">Export Data</button>
+     <button id="exportButton" disabled>Export Data</button>
     </div>
 
     <div id="dataPopup" style="display:none">
         <div id="dataPopupContent">
-         <span class="closePopup">&times;</span>
+         <span class="closePopup">×</span>
          <table id="popupTable"></table>
         </div>
     </div>
 
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <script>
+         // Firebase Configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyCOODiDUvRq7EaOZtmK7C82dAGCtCjEGBI",
+          authDomain: "expiry-record.firebaseapp.com",
+          projectId: "expiry-record",
+          storageBucket: "expiry-record.firebasestorage.app",
+          messagingSenderId: "457082071077",
+          appId: "1:457082071077:web:9ac6b994b459dbdb29f7cc",
+          measurementId: "G-VKENXVTLB5"
+        };
+
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore(app); // Firestore database instance
+
          // Global variables
         let database = [];
         let currentItem = null;
+        let enteredRecords = [];
         let headerMap = {}; // Map to store column index by header
         let barcodeHeader = '';
         let nameHeader = '';
         let expiryHeaderCount = 0;
-        let enteredRecords = []; // Keep enteredRecords for local export
+
+        const googleSheetCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRBHjQ-Gsb4AFkplCr5sHTme_hAXGzr51-2bhCfrw6rjUaAg5TkRHU8COSYPE9BaA/pub?output=csv";
+
 
         // Get HTML elements
         const fileInput = document.getElementById('fileInput');
         const importButton = document.getElementById('importButton');
+        const loadSheetButton = document.getElementById('loadSheetButton'); // Google Sheet Load Button
         const searchBarcodeInput = document.getElementById('searchBarcodeInput');
         const searchButton = document.getElementById('searchButton');
          const searchResultTable = document.getElementById('searchResultTable');
@@ -332,6 +258,7 @@
         const addExpiryButton = document.getElementById('addExpiryButton');
         const saveButton = document.getElementById('saveButton');
         const clearFieldsButton = document.getElementById('clearFieldsButton');
+        const recordTableBody = document.getElementById('recordTableBody');
         const exportButton = document.getElementById('exportButton');
          const viewDataButton = document.getElementById('viewDataButton');
         const clearDatabaseButton = document.getElementById('clearDatabaseButton');
@@ -353,130 +280,150 @@
           }
 
 
-        // Load data from local storage (only for database and headers now)
-        function loadDataFromLocalStorage() {
-            loadFromLocalStorageOnly();
-
-            const storedCurrentDate = localStorage.getItem('currentDate');
-
-            if (!storedCurrentDate) {
-                localStorage.setItem('currentDate', getCurrentDateTime());
-                storedCurrentDate = localStorage.getItem('currentDate')
-            }
-
-            currentDateDisplay.textContent = `Current Date: ${storedCurrentDate}`;
-
-            if (database.length > 0) {
-                searchButton.disabled = false;
-                viewDataButton.disabled = false;
-            }
-        }
-
-
-        function loadFromLocalStorageOnly() { // Helper function for local storage fallback
-            const storedDatabase = localStorage.getItem('database');
-            const storedHeaderMap = localStorage.getItem('headerMap');
-            const storedBarcodeHeader = localStorage.getItem('barcodeHeader');
-            const storedNameHeader = localStorage.getItem('nameHeader');
-
-            if (storedDatabase) database = JSON.parse(storedDatabase);
-            if (storedHeaderMap) headerMap = JSON.parse(storedHeaderMap);
-            if (storedBarcodeHeader) barcodeHeader = storedBarcodeHeader;
-            if (storedNameHeader) nameHeader = storedNameHeader;
-
-            if (database.length > 0) {
-                searchButton.disabled = false;
-                viewDataButton.disabled = false;
-            }
-        }
-
-
-        loadDataFromLocalStorage();
-
-
-        // Import Functionality (Phase 2) - Modified for Website File
-        importButton.addEventListener('click', handleWebsiteDataLoad);
-
-        async function fetchDataFromWebsite() {
-            // **REPLACE WITH YOUR ACTUAL GITHUB PAGES EXCEL FILE URL HERE:**
-            const excelFileURL = 'https://raw.githubusercontent.com/kero-784/expiry-report/main/inventory_data.xlsx'; // Use raw=true for direct file access from GitHub
-
+        // Load data from Firebase Firestore
+        async function loadDataFromFirestore() {
             try {
-                const response = await fetch(excelFileURL);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                const metadataDoc = await db.collection('appMetadata').doc('headers').get();
+                if (metadataDoc.exists) {
+                    const metadata = metadataDoc.data();
+                    headerMap = metadata.headerMap || {};
+                    barcodeHeader = metadata.barcodeHeader || '';
+                    nameHeader = metadata.nameHeader || '';
                 }
-                const arrayBuffer = await response.arrayBuffer(); // Get data as ArrayBuffer
-                return arrayBuffer;
+
+                const inventoryCollection = db.collection('inventoryData');
+                const snapshot = await inventoryCollection.get();
+                database = [];
+                snapshot.forEach(doc => {
+                    database.push(doc.data());
+                });
+
+
+                renderEnteredRecords();
+
+                if (database.length > 0) {
+                    searchButton.disabled = false;
+                    viewDataButton.disabled = false;
+                    clearDatabaseButton.disabled = false;
+                    exportButton.disabled = false;
+                }
+                console.log("Data loaded from Firestore.");
 
             } catch (error) {
-                console.error("Error fetching Excel file from website:", error);
-                alert('Error loading data from website. Check console.');
-                return null;
+                console.error("Error loading data from Firestore:", error);
+                alert("Error loading data from Firebase. Check console.");
+            }
+        }
+
+        loadDataFromFirestore();
+
+
+        // Function to parse CSV data
+        function parseCSV(csvText) {
+            const lines = csvText.trim().split('\n');
+            const headers = lines[0].split(',').map(header => header.trim());
+            const data = [];
+            for (let i = 1; i < lines.length; i++) {
+                const currentLine = lines[i].split(',').map(cell => cell.trim());
+                const obj = {};
+                for (let j = 0; j < headers.length; j++) {
+                    obj[headers[j]] = currentLine[j];
+                }
+                data.push(obj);
+            }
+            return { headers, data };
+        }
+
+
+        // Import Functionality from Google Sheet
+        loadSheetButton.addEventListener('click', handleGoogleSheetImport);
+
+        async function handleGoogleSheetImport() {
+             try {
+                 const response = await fetch(googleSheetCsvUrl);
+                 if (!response.ok) {
+                     throw new Error(`HTTP error! status: ${response.status}`);
+                 }
+                 const csvText = await response.text();
+                 const csvData = parseCSV(csvText);
+                 if (!csvData || csvData.data.length === 0) {
+                     alert('Google Sheet is empty or unreadable!');
+                     return;
+                 }
+
+                 const headers = csvData.headers;
+                 headers.forEach((header, index) => {
+                     if(header && header.toLowerCase().includes('barcode')) {
+                       barcodeHeader = header;
+                     }
+                     if(header && header.toLowerCase().includes('name')){
+                       nameHeader = header
+                     }
+                      headerMap[header] = index;
+                 });
+
+                  if (!barcodeHeader) {
+                      alert("No 'barcode' column found in the Google Sheet.")
+                      return;
+                  }
+                  if (!nameHeader){
+                      alert("No 'name' column found in the Google Sheet.");
+                      return;
+                  }
+
+                 database = csvData.data;
+
+                 await saveDatabaseToFirestore(database, headerMap, barcodeHeader, nameHeader);
+
+                 alert('Data imported from Google Sheet successfully!');
+                 renderEnteredRecords();
+                 viewDataButton.disabled = false;
+                 clearDatabaseButton.disabled = false;
+                 exportButton.disabled = false;
+
+
+             } catch (error) {
+                 console.error("Error importing data from Google Sheet:", error);
+                 alert('Error importing data from Google Sheet. Please check console for details.');
+             }
+         }
+
+
+        // Function to save database data to Firestore
+        async function saveDatabaseToFirestore(dbData, headerMapData, barcodeHeaderData, nameHeaderData) {
+            try {
+                const inventoryCollection = db.collection('inventoryData');
+
+                // Clear existing data in the collection
+                const querySnapshot = await inventoryCollection.get();
+                const batch = db.batch();
+                querySnapshot.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                await batch.commit();
+                console.log("Cleared previous inventory data from Firestore.");
+
+
+                for (const item of dbData) {
+                    await inventoryCollection.add(item);
+                }
+
+                await db.collection('appMetadata').doc('headers').set({
+                    headerMap: headerMapData,
+                    barcodeHeader: barcodeHeaderData,
+                    nameHeader: nameHeaderData
+                });
+
+                console.log("Database, header map, and header info saved to Firestore.");
+
+            } catch (error) {
+                console.error("Error saving data to Firestore:", error);
+                throw error;
             }
         }
 
 
-        async function handleWebsiteDataLoad() {
-            const fileData = await fetchDataFromWebsite();
-            if (fileData) {
-                try {
-                    const workbook = XLSX.read(fileData, { type: 'array' });
-                    const sheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[sheetName];
-                    const excelData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-                    if (!excelData || excelData.length <= 1) {
-                        alert('No data found in the Excel file or file is empty.');
-                        return;
-                    }
-
-                    const headers = excelData[0];
-                    let tempHeaderMap = {};
-                    let tempBarcodeHeader = '';
-                    let tempNameHeader = '';
-
-                    headers.forEach((header, index) => {
-                        if (header && header.toLowerCase().includes('barcode')) {
-                            tempBarcodeHeader = header;
-                        }
-                        if (header && header.toLowerCase().includes('name')) {
-                            tempNameHeader = header;
-                        }
-                        tempHeaderMap[header] = index;
-                    });
-
-                    if (!tempBarcodeHeader) {
-                        alert("No 'barcode' column found in the file.");
-                        return;
-                    }
-                    if (!tempNameHeader) {
-                        alert("No 'name' column found in the file.");
-                        return;
-                    }
-
-                    database = excelData.slice(1);
-
-
-                    localStorage.setItem('database', JSON.stringify(database));
-                    localStorage.setItem('headerMap', JSON.stringify(tempHeaderMap));
-                    localStorage.setItem('barcodeHeader', tempBarcodeHeader);
-                    localStorage.setItem('nameHeader', tempNameHeader);
-
-                    viewDataButton.disabled = false;
-                    searchButton.disabled = false; // Enable search after data load
-                    alert('Data loaded from website successfully!');
-
-
-                } catch (e) {
-                   console.error("Error parsing file:", e)
-                    alert('Error parsing file, please check the file format!');
-                }
-             }
-        }
-
-
-       // Search Functionality (Phase 3) - No changes needed
+       // Search Functionality (Phase 3)
         searchButton.addEventListener('click', () => {
             const barcode = searchBarcodeInput.value.trim();
 
@@ -485,11 +432,12 @@
                 return;
             }
             if(database.length === 0){
-                alert('No data imported, Please import data first.')
+                alert('No data loaded from Google Sheet.')
                 return;
             }
 
-            const foundItem = database.find(item => item[headerMap[barcodeHeader]] === barcode);
+            const foundItem = database.find(item => item[headerMap[barcodeHeader]] === barcode || item[barcodeHeader] === barcode);
+
 
             if (foundItem) {
               currentItem = foundItem;
@@ -523,7 +471,7 @@
                const row = document.createElement('tr');
              for (const header in headerMap) {
                const td = document.createElement('td');
-               td.textContent = foundItem[headerMap[header]];
+               td.textContent = foundItem[header];
                row.appendChild(td)
               }
 
@@ -531,7 +479,7 @@
            searchResultTable.style.display = 'block';
         }
 
-        // Expiry Date Management (Phase 4) - No changes needed
+        // Expiry Date Management (Phase 4)
         addExpiryButton.addEventListener('click', addExpiryEntry);
 
         function addExpiryEntry() {
@@ -605,8 +553,8 @@
 
           return true;
         }
-        // Save Entry (Phase 5) - Modified for local storage only
-          saveButton.addEventListener('click', () => {
+        // Save Entry (Phase 5)
+          saveButton.addEventListener('click', async () => {
              if(!currentItem){
                 alert("Please search for an item to save!");
                  return;
@@ -618,10 +566,10 @@
             }
              const itemData = {};
              for(const header in headerMap) {
-               itemData[header] = currentItem[headerMap[header]];
+               itemData[header] = currentItem[header];
              }
 
-             const existingRecordIndex = enteredRecords.findIndex(record => record[barcodeHeader] === itemData[barcodeHeader]);
+             const existingRecordIndex = enteredRecords.findIndex(record => record[barcodeHeader] === itemData[barcodeHeader] || record[barcodeHeader] === itemData[barcodeHeader]);
 
            let record = existingRecordIndex === -1 ? {...itemData} : enteredRecords[existingRecordIndex]
 
@@ -654,45 +602,171 @@
 
            if (existingRecordIndex === -1){
              enteredRecords.push(record);
-           } else {
-              enteredRecords[existingRecordIndex] = record; // Update existing record
            }
 
-            localStorage.setItem('enteredRecords', JSON.stringify(enteredRecords));
+
+            await saveEnteredRecordsToFirestore(enteredRecords);
+             renderEnteredRecords();
              clearFields();
-            searchBarcodeInput.value = ''; // Clear the search input
-              searchResultTable.style.display = 'none';//Clear the search result table
-              alert("Entry Saved Locally (Export to keep records)"); // Alert user about local save
+            searchBarcodeInput.value = '';
+              searchResultTable.style.display = 'none';
           });
 
-        // Clear Functions (Phase 6) - Modified for local data only
+           // Function to save entered records to Firestore
+        async function saveEnteredRecordsToFirestore(records) {
+            try {
+                const recordsCollection = db.collection('inventoryRecords');
+
+                // Clear existing records before saving new ones - you might want to adjust this logic
+                const querySnapshot = await recordsCollection.get();
+                const batch = db.batch();
+                querySnapshot.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                await batch.commit();
+                console.log("Cleared previous entered records from Firestore.");
+
+
+                for (const record of records) {
+                    await recordsCollection.add(record);
+                }
+                console.log("Entered records saved to Firestore.");
+
+            } catch (error) {
+                console.error("Error saving entered records to Firestore:", error);
+                alert("Error saving entered records to Firebase. Check console.");
+            }
+        }
+
+        // Clear Functions (Phase 6)
         clearFieldsButton.addEventListener('click', clearFields);
 
         function clearFields() {
              expiryInputs.innerHTML = '';
         }
-        clearDatabaseButton.addEventListener('click', clearDatabase); // Renamed button to Clear Data
+        clearDatabaseButton.addEventListener('click', clearDatabase);
 
-          function clearDatabase() {
+          async function clearDatabase() {
+           await clearFirestoreDatabase();
+
            database = [];
            currentItem = null;
-           enteredRecords = []; // Clear entered records too
+           enteredRecords = [];
            headerMap = {};
            barcodeHeader = '';
            nameHeader = '';
            expiryHeaderCount = 0;
 
+           recordTableBody.innerHTML = '';
            searchBarcodeInput.value = '';
            clearFields();
            saveButton.disabled = true;
+           viewDataButton.disabled = true;
+           clearDatabaseButton.disabled = true;
+           exportButton.disabled = true;
+           searchButton.disabled = true;
            searchResultTable.style.display = 'none';
-           localStorage.clear(); // Clear all local storage
-         alert("Data has been cleared locally!"); // Updated alert message
+
+         alert("Database has been cleared from Firebase!");
        }
 
+        async function clearFirestoreDatabase() {
+            try {
+                // Clear 'inventoryData' collection
+                const inventoryCollection = db.collection('inventoryData');
+                let querySnapshot = await inventoryCollection.get();
+                let batch = db.batch();
+                querySnapshot.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                await batch.commit();
+                console.log("Cleared 'inventoryData' collection.");
 
-        // Render Table & List Box (Phase 7) - No record table anymore
+                // Clear 'inventoryRecords' collection
+                const recordsCollection = db.collection('inventoryRecords');
+                querySnapshot = await recordsCollection.get();
+                batch = db.batch();
+                querySnapshot.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                await batch.commit();
+                console.log("Cleared 'inventoryRecords' collection.");
 
+                // Clear header metadata
+                await db.collection('appMetadata').doc('headers').delete();
+                console.log("Cleared header metadata.");
+
+            } catch (error) {
+                console.error("Error clearing Firestore database:", error);
+                alert("Error clearing database in Firebase. Check console.");
+            }
+        }
+
+
+        // Render Table & List Box (Phase 7)
+
+
+           async function renderEnteredRecords() {
+            const tableHead = recordTable.querySelector('thead');
+                const tableBody = recordTable.querySelector('tbody');
+
+                // Clear existing table headers and body
+                tableHead.innerHTML = '';
+                tableBody.innerHTML = '';
+
+                try {
+                    const recordsCollection = db.collection('inventoryRecords');
+                    const snapshot = await recordsCollection.get();
+                    enteredRecords = [];
+                    const recordsFromFirestore = [];
+                    snapshot.forEach(doc => {
+                        recordsFromFirestore.push(doc.data());
+                        enteredRecords.push(doc.data());
+                    });
+
+
+                    if (recordsFromFirestore.length === 0) {
+                        return;
+                    }
+
+                    const allHeaders = new Set();
+                    recordsFromFirestore.forEach(record => {
+                        for (const key in record) {
+                            allHeaders.add(key);
+                        }
+                    });
+                    const headerRow = document.createElement('tr');
+                    allHeaders.forEach(header => {
+                        const headerCell = document.createElement('th');
+                        headerCell.textContent = header;
+                        headerRow.appendChild(headerCell);
+                    });
+
+                    const recordTimeHeader = document.createElement('th');
+                    recordTimeHeader.textContent = "Recording Time";
+                    headerRow.appendChild(recordTimeHeader);
+
+                    tableHead.appendChild(headerRow);
+
+                    recordsFromFirestore.forEach(record => {
+                        const row = document.createElement('tr');
+                        allHeaders.forEach(key => {
+                            const cell = document.createElement('td');
+                            cell.textContent = record[key] || '';
+                            row.appendChild(cell);
+                        });
+                        const recordTimeCell = document.createElement('td');
+                        recordTimeCell.textContent = record.recordTime || '';
+                        row.appendChild(recordTimeCell);
+
+                        tableBody.appendChild(row);
+                    });
+
+                } catch (error) {
+                    console.error("Error rendering entered records from Firestore:", error);
+                    alert("Error rendering entered records. Check console.");
+                }
+         }
 
         function renderDataList(){
              const popupTable = document.getElementById('popupTable');
@@ -711,7 +785,7 @@
               const tr = document.createElement('tr');
               for (const header in headerMap) {
                 const td = document.createElement('td');
-                td.textContent = row[headerMap[header]];
+                td.textContent = row[header];
                 tr.appendChild(td);
               }
               popupTable.appendChild(tr);
@@ -721,7 +795,7 @@
         }
 
 
-        // Export Data (Phase 8) - Modified to export local entered records
+        // Export Data (Phase 8)
         exportButton.addEventListener('click', () => {
             if (enteredRecords.length === 0) {
                 alert('No records to export!');
@@ -733,8 +807,9 @@
                 const workbook = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventory Records');
                 XLSX.writeFile(workbook, 'inventory_records.xlsx');
-                enteredRecords = []; // Clear entered records after export
-               localStorage.setItem('enteredRecords', JSON.stringify(enteredRecords)); // Clear local storage too after export
+                enteredRecords = [];
+                saveEnteredRecordsToFirestore(enteredRecords); // Clear Firestore records after export - adjust logic if needed.
+                renderEnteredRecords();
             } catch (error) {
                 console.error("Error during export:", error);
                 alert('An error occurred while exporting the data.');
@@ -743,7 +818,7 @@
 
        viewDataButton.addEventListener('click', () =>{
             if(database.length === 0){
-               alert("Please import data to display!") // Updated message
+               alert("Please Load Google Sheet data to display!");
                 return;
             }
            renderDataList();
