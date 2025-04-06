@@ -1,9 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventory Manager</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon"> <!-- Favicon link added here -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet"> <!-- Roboto and Roboto Condensed -->
@@ -496,7 +498,7 @@
 
         // Load data from local storage
         function loadDataFromLocalStorage() {
-             const storedDatabase = localStorage.getItem('database');
+             //const storedDatabase = localStorage.getItem('database'); // No longer load database from local storage
              const storedEnteredRecords = localStorage.getItem('enteredRecords');
              const storedHeaderMap = localStorage.getItem('headerMap');
              const storedBarcodeHeader = localStorage.getItem('barcodeHeader');
@@ -504,9 +506,23 @@
              let storedCurrentDate = localStorage.getItem('currentDate');
 
 
-            if (storedDatabase) database = JSON.parse(storedDatabase);
+             //if (storedDatabase) database = JSON.parse(storedDatabase); // No longer load database from local storage
             if (storedEnteredRecords) enteredRecords = JSON.parse(storedEnteredRecords);
-            if (storedHeaderMap) headerMap = JSON.parse(storedHeaderMap);
+
+            if (storedHeaderMap) {
+                try {
+                    headerMap = JSON.parse(storedHeaderMap);
+                } catch (e) {
+                    console.warn("Error parsing stored headerMap from localStorage. Resetting headerMap to empty object.", e);
+                    headerMap = {}; // Initialize to empty object in case of parsing error
+                    // Optionally, you could also clear the corrupted localStorage item:
+                    // localStorage.removeItem('headerMap');
+                }
+            } else {
+                headerMap = {}; // Initialize to empty object if not found in localStorage
+            }
+
+
             if (storedBarcodeHeader) barcodeHeader = storedBarcodeHeader;
              if(storedNameHeader) nameHeader = storedNameHeader;
               if(!storedCurrentDate){
@@ -516,7 +532,7 @@
 
                currentDateDisplay.textContent = `Current Date: ${storedCurrentDate}`;
             renderEnteredRecords();
-            console.log("Attempted to load data from Local Storage."); // Debugging message - indicate attempt
+            console.log("Attempted to load data from Local Storage (Entered Records & Settings)."); // Debugging message - indicate attempt, clarified for records & settings
          }
 
 
@@ -545,7 +561,7 @@
                 const response = await fetch(googleSheetCsvUrl);
                 if (!response.ok) {
                     console.error(`HTTP error! status: ${response.status}, statusText: ${response.statusText}`); // More detailed error log
-                    alert(`Failed to fetch updated data from Google Sheet. HTTP error! Status: ${response.status} ${response.statusText}. Using potentially older local data. Please check console for details.`); // Updated alert message
+                    alert(`Failed to fetch updated data from Google Sheet. HTTP error! Status: ${response.status} ${response.statusText}. Inventory data will be loaded only when fetched successfully. Please check console for details.`); // Updated alert message
                     return null; // Indicate failure
                 }
                 const csvText = await response.text();
@@ -554,14 +570,14 @@
                 return parsedData; // Return parsed data
             } catch (error) {
                 console.error("Error fetching data from Google Sheet:", error); // Full error object in console
-                alert('Failed to load updated data from Google Sheet due to a network error or issue parsing data. Using potentially older local data. Please check console for details.'); // Updated alert message
+                alert('Failed to load inventory data from Google Sheet due to a network error or issue parsing data. Inventory data will be loaded only when fetched successfully. Please check console for details.'); // Updated alert message
                 return null; // Indicate failure
             }
         }
 
 
         async function initializeData() {
-            loadDataFromLocalStorage(); // Try to load from local storage *first* - keep this for quick initial load if possible
+            loadDataFromLocalStorage(); // Load entered records and settings from local storage
 
             const googleSheetData = await fetchDataFromGoogleSheet(); // *Always* fetch from Google Sheet
 
@@ -579,18 +595,18 @@
                 });
 
                  if (!barcodeHeader) {
-                     alert("No 'barcode' column found in the Google Sheet data. Please ensure your Google Sheet has a column header that includes 'barcode'. Using potentially older local data."); // Updated alert message
+                     alert("No 'barcode' column found in the Google Sheet data. Please ensure your Google Sheet has a column header that includes 'barcode'. Inventory data loading failed."); // Updated alert message
                      return; // Stop further processing of Google Sheet data
                  }
                  if (!nameHeader){
-                     alert("No 'name' column found in the Google Sheet data. Please ensure your Google Sheet has a column header that includes 'name'. Using potentially older local data."); // Updated alert message
+                     alert("No 'name' column found in the Google Sheet data. Please ensure your Google Sheet has a column header that includes 'name'. Inventory data loading failed."); // Updated alert message
                      return; // Stop further processing of Google Sheet data
                  }
 
                 // Convert array of objects to array of arrays for database
                 database = data.map(item => headers.map(header => item[header]));
 
-                localStorage.setItem('database', JSON.stringify(database)); // *Overwrite* local storage with new data
+                //localStorage.setItem('database', JSON.stringify(database)); // No longer store database in local storage
                  localStorage.setItem('headerMap', JSON.stringify(headerMap));
                  localStorage.setItem('barcodeHeader', barcodeHeader);
                   localStorage.setItem('nameHeader', nameHeader);
@@ -601,21 +617,16 @@
                searchButton.disabled = false;
                clearDatabaseButton.disabled = false;
                exportButton.disabled = false;
-               console.log("Data initialized/updated from Google Sheet and saved to Local Storage."); // Debugging message - updated message
+               console.log("Inventory data initialized/updated from Google Sheet."); // Debugging message - updated message
             } else {
-                console.warn("Failed to update data from Google Sheet. Using potentially older inventory data from local storage."); // More specific warning
-                alert("Failed to load updated inventory data from Google Sheets. Using potentially older data from local storage. Some data might be outdated. Please check console for errors."); // Updated alert message
-                if(database.length === 0){
-                    viewDataButton.disabled = true; // Disable buttons if even local storage has no data as fallback
+                console.warn("Failed to update data from Google Sheet. Inventory functions are disabled until data is loaded."); // More specific warning
+                alert("Failed to load inventory data from Google Sheets. Inventory functions are disabled until data is loaded. Please check console for errors and refresh the page to try again."); // Updated alert message
+
+                    viewDataButton.disabled = true; // Disable buttons if data loading fails
                     searchButton.disabled = true;
                     clearDatabaseButton.disabled = true;
                     exportButton.disabled = true;
-                } else {
-                    viewDataButton.disabled = false; // Enable buttons using fallback local storage data
-                    searchButton.disabled = false;
-                    clearDatabaseButton.disabled = false;
-                    exportButton.disabled = false;
-                }
+
             }
         }
 
@@ -645,7 +656,7 @@
                 return;
             }
             if(database.length === 0){
-                alert('No inventory data loaded yet. Please wait or refresh the page.'); // User feedback if no data
+                alert('Inventory data is still loading from Google Sheets or failed to load. Please wait or refresh the page.'); // User feedback if no data
                 return;
             }
 
@@ -1000,8 +1011,18 @@
            }
          });
 
-        // Function for individual Save Entry - REMOVED as per request
-        // function saveSingleEntry(entryDiv) { ... }
+        // Automatic Search Trigger on Enter Key
+        searchBarcodeInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                searchButton.click();
+            }
+        });
+
+        // Automatic Focus on Search Input on Page Load
+        window.addEventListener('load', function() {
+            searchBarcodeInput.focus();
+        });
     </script>
 </body>
 </html>
