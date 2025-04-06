@@ -448,7 +448,7 @@
         firebase.initializeApp(firebaseConfig);
         const analytics = firebase.analytics();
 
-         // Google Sheet CSV URL
+         // Google Sheet CSV URL - UPDATED WITH CORRECT LINK
         const googleSheetCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQNrRFFRPe_jrOrDZM58gRqxfsA0deD60_q2jkA7XJRRfJQ7IiBdIqNDN7JdMawjw/pub?output=csv";
 
          // Global variables
@@ -523,6 +523,7 @@
                  clearDatabaseButton.disabled = false;
                  exportButton.disabled = false;
              }
+             console.log("Data loaded from Local Storage."); // Debugging message
          }
 
 
@@ -546,17 +547,21 @@
 
         // Function to fetch data from Google Sheet
         async function fetchDataFromGoogleSheet() {
+            console.log("Fetching data from Google Sheet..."); // Debugging message
             try {
                 const response = await fetch(googleSheetCsvUrl);
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    console.error(`HTTP error! status: ${response.status}, statusText: ${response.statusText}`); // More detailed error log
+                    alert(`Failed to fetch data from Google Sheet. HTTP error! Status: ${response.status} ${response.statusText}. Please check console for details.`);
+                    return null;
                 }
                 const csvText = await response.text();
                 const parsedData = parseCSV(csvText);
+                console.log("Data fetched and parsed from Google Sheet successfully."); // Debugging message
                 return parsedData;
             } catch (error) {
-                console.error("Error fetching data from Google Sheet:", error);
-                alert('Failed to load data from Google Sheet. Please check console for details.');
+                console.error("Error fetching data from Google Sheet:", error); // Full error object in console
+                alert('Failed to load data from Google Sheet due to a network error or issue parsing data. Please check console for details.');
                 return null;
             }
         }
@@ -581,11 +586,11 @@
                     });
 
                      if (!barcodeHeader) {
-                         alert("No 'barcode' column found in the Google Sheet data.")
+                         alert("No 'barcode' column found in the Google Sheet data. Please ensure your Google Sheet has a column header that includes 'barcode'.");
                          return;
                      }
                      if (!nameHeader){
-                         alert("No 'name' column found in the Google Sheet data.");
+                         alert("No 'name' column found in the Google Sheet data. Please ensure your Google Sheet has a column header that includes 'name'.");
                          return;
                      }
 
@@ -597,13 +602,19 @@
                      localStorage.setItem('barcodeHeader', barcodeHeader);
                       localStorage.setItem('nameHeader', nameHeader);
 
-                    alert('Data loaded successfully from Google Sheet!');
+                    alert('Inventory data loaded successfully from Google Sheets!'); // More informative success message
                      renderEnteredRecords();
                    viewDataButton.disabled = false;
                    searchButton.disabled = false;
                    clearDatabaseButton.disabled = false;
                    exportButton.disabled = false;
+                   console.log("Data initialized from Google Sheet and saved to Local Storage."); // Debugging message
+                } else {
+                    console.warn("Failed to initialize data from Google Sheet. App may be running with no initial inventory data."); // Warning if Google Sheet load fails
+                    alert("Initial inventory data load from Google Sheets failed. Some features might be limited. Please check console for errors.");
                 }
+            } else {
+                console.log("Data already present in Local Storage, skipping Google Sheet fetch."); // Debugging message
             }
         }
 
@@ -633,7 +644,7 @@
                 return;
             }
             if(database.length === 0){
-                alert('No data loaded from Google Sheet.')
+                alert('No inventory data loaded yet. Please wait or refresh the page.'); // User feedback if no data
                 return;
             }
 
@@ -839,25 +850,30 @@
         clearDatabaseButton.addEventListener('click', clearDatabase);
 
           function clearDatabase() {
-           database = [];
-           currentItem = null;
-           enteredRecords = [];
-           headerMap = {};
-           barcodeHeader = '';
-           nameHeader = '';
-           expiryHeaderCount = 0;
+           if(confirm("Are you sure you want to clear the entire database? This action cannot be undone.")){ // Confirmation before clearing
+               database = [];
+               currentItem = null;
+               enteredRecords = [];
+               headerMap = {};
+               barcodeHeader = '';
+               nameHeader = '';
+               expiryHeaderCount = 0;
 
-           recordTableBody.innerHTML = '';
-           searchBarcodeInput.value = '';
-           clearFields();
-           saveButton.disabled = true;
-           viewDataButton.disabled = true;
-           searchButton.disabled = true;
-           clearDatabaseButton.disabled = true;
-           exportButton.disabled = true;
-           searchResultTable.style.display = 'none';
-           localStorage.clear();
-         alert("Database has been cleared!");
+               recordTableBody.innerHTML = '';
+               searchBarcodeInput.value = '';
+               clearFields();
+               saveButton.disabled = true;
+               viewDataButton.disabled = true;
+               searchButton.disabled = true;
+               clearDatabaseButton.disabled = true;
+               exportButton.disabled = true;
+               searchResultTable.style.display = 'none';
+               localStorage.clear();
+             alert("Database has been cleared successfully!"); // Success message for clear database
+           } else {
+               alert("Clear database operation cancelled."); // Cancel message
+           }
+
        }
 
 
@@ -910,6 +926,10 @@
          }
 
         function renderDataList(){ //Same as before
+             if(database.length === 0) {
+                alert("Inventory data is still loading from Google Sheets. Please wait a moment and try again."); // Message if data not yet loaded for view data
+                return;
+             }
              const popupTable = document.getElementById('popupTable');
             popupTable.innerHTML = '';
 
@@ -943,27 +963,29 @@
                 return;
             }
 
-            try {
-                const worksheet = XLSX.utils.json_to_sheet(enteredRecords);
-                const workbook = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventory Records');
-                XLSX.writeFile(workbook, 'inventory_records.xlsx');
-                enteredRecords = [];
-               localStorage.setItem('enteredRecords', JSON.stringify(enteredRecords));
-                renderEnteredRecords();
-                alert('Data exported successfully and records cleared!');
-            } catch (error) {
-                console.error("Error during export:", error);
-                alert('An error occurred while exporting the data.');
+            if(confirm("Export inventory records to XLSX file and clear entered records?")){ // Confirmation before export and clear
+                try {
+                    alert("Exporting inventory records, please wait..."); // Start export message
+                    const worksheet = XLSX.utils.json_to_sheet(enteredRecords);
+                    const workbook = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventory Records');
+                    XLSX.writeFile(workbook, 'inventory_records.xlsx');
+                    enteredRecords = [];
+                   localStorage.setItem('enteredRecords', JSON.stringify(enteredRecords));
+                    renderEnteredRecords();
+                    alert('Data exported successfully and entered records cleared!'); // Success message for export
+                } catch (error) {
+                    console.error("Error during export:", error);
+                    alert('An error occurred while exporting the data. Please check console for details.'); // Error message for export
+                }
+            } else {
+                alert("Export operation cancelled."); // Cancel message
             }
+
         });
 
        viewDataButton.addEventListener('click', () =>{ //Same as before
-            if(database.length === 0){
-               alert("Please wait for data to load from Google Sheet to display data!")
-                return;
-            }
-           renderDataList();
+            renderDataList();
         });
 
 
