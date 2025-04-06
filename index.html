@@ -516,14 +516,7 @@
 
                currentDateDisplay.textContent = `Current Date: ${storedCurrentDate}`;
             renderEnteredRecords();
-
-             if(database.length >0){
-                searchButton.disabled = false;
-                 viewDataButton.disabled = false;
-                 clearDatabaseButton.disabled = false;
-                 exportButton.disabled = false;
-             }
-             console.log("Data loaded from Local Storage."); // Debugging message
+            console.log("Attempted to load data from Local Storage."); // Debugging message - indicate attempt
          }
 
 
@@ -552,69 +545,77 @@
                 const response = await fetch(googleSheetCsvUrl);
                 if (!response.ok) {
                     console.error(`HTTP error! status: ${response.status}, statusText: ${response.statusText}`); // More detailed error log
-                    alert(`Failed to fetch data from Google Sheet. HTTP error! Status: ${response.status} ${response.statusText}. Please check console for details.`);
-                    return null;
+                    alert(`Failed to fetch updated data from Google Sheet. HTTP error! Status: ${response.status} ${response.statusText}. Using potentially older local data. Please check console for details.`); // Updated alert message
+                    return null; // Indicate failure
                 }
                 const csvText = await response.text();
                 const parsedData = parseCSV(csvText);
                 console.log("Data fetched and parsed from Google Sheet successfully."); // Debugging message
-                return parsedData;
+                return parsedData; // Return parsed data
             } catch (error) {
                 console.error("Error fetching data from Google Sheet:", error); // Full error object in console
-                alert('Failed to load data from Google Sheet due to a network error or issue parsing data. Please check console for details.');
-                return null;
+                alert('Failed to load updated data from Google Sheet due to a network error or issue parsing data. Using potentially older local data. Please check console for details.'); // Updated alert message
+                return null; // Indicate failure
             }
         }
 
 
         async function initializeData() {
-            loadDataFromLocalStorage(); // Try to load from local storage first
+            loadDataFromLocalStorage(); // Try to load from local storage *first* - keep this for quick initial load if possible
 
-            if (database.length === 0) { // If no data in local storage, fetch from Google Sheet
-                const googleSheetData = await fetchDataFromGoogleSheet();
-                if (googleSheetData) {
-                    const { headers, data } = googleSheetData;
+            const googleSheetData = await fetchDataFromGoogleSheet(); // *Always* fetch from Google Sheet
 
-                    headers.forEach((header, index) => {
-                        if(header && header.toLowerCase().includes('barcode')) {
-                          barcodeHeader = header;
-                        }
-                        if(header && header.toLowerCase().includes('name')){
-                          nameHeader = header
-                        }
-                         headerMap[header] = index; //Still using index as value, but headers are from google sheet now
-                    });
+            if (googleSheetData) {
+                const { headers, data } = googleSheetData;
 
-                     if (!barcodeHeader) {
-                         alert("No 'barcode' column found in the Google Sheet data. Please ensure your Google Sheet has a column header that includes 'barcode'.");
-                         return;
-                     }
-                     if (!nameHeader){
-                         alert("No 'name' column found in the Google Sheet data. Please ensure your Google Sheet has a column header that includes 'name'.");
-                         return;
-                     }
+                headers.forEach((header, index) => {
+                    if(header && header.toLowerCase().includes('barcode')) {
+                      barcodeHeader = header;
+                    }
+                    if(header && header.toLowerCase().includes('name')){
+                      nameHeader = header
+                    }
+                     headerMap[header] = index; //Still using index as value, but headers are from google sheet now
+                });
 
-                    // Convert array of objects to array of arrays for database
-                    database = data.map(item => headers.map(header => item[header]));
+                 if (!barcodeHeader) {
+                     alert("No 'barcode' column found in the Google Sheet data. Please ensure your Google Sheet has a column header that includes 'barcode'. Using potentially older local data."); // Updated alert message
+                     return; // Stop further processing of Google Sheet data
+                 }
+                 if (!nameHeader){
+                     alert("No 'name' column found in the Google Sheet data. Please ensure your Google Sheet has a column header that includes 'name'. Using potentially older local data."); // Updated alert message
+                     return; // Stop further processing of Google Sheet data
+                 }
 
-                    localStorage.setItem('database', JSON.stringify(database));
-                     localStorage.setItem('headerMap', JSON.stringify(headerMap));
-                     localStorage.setItem('barcodeHeader', barcodeHeader);
-                      localStorage.setItem('nameHeader', nameHeader);
+                // Convert array of objects to array of arrays for database
+                database = data.map(item => headers.map(header => item[header]));
 
-                    alert('Inventory data loaded successfully from Google Sheets!'); // More informative success message
-                     renderEnteredRecords();
-                   viewDataButton.disabled = false;
-                   searchButton.disabled = false;
-                   clearDatabaseButton.disabled = false;
-                   exportButton.disabled = false;
-                   console.log("Data initialized from Google Sheet and saved to Local Storage."); // Debugging message
-                } else {
-                    console.warn("Failed to initialize data from Google Sheet. App may be running with no initial inventory data."); // Warning if Google Sheet load fails
-                    alert("Initial inventory data load from Google Sheets failed. Some features might be limited. Please check console for errors.");
-                }
+                localStorage.setItem('database', JSON.stringify(database)); // *Overwrite* local storage with new data
+                 localStorage.setItem('headerMap', JSON.stringify(headerMap));
+                 localStorage.setItem('barcodeHeader', barcodeHeader);
+                  localStorage.setItem('nameHeader', nameHeader);
+
+                alert('Inventory data updated successfully from Google Sheets!'); // Success message for Google Sheet update
+                 renderEnteredRecords();
+               viewDataButton.disabled = false;
+               searchButton.disabled = false;
+               clearDatabaseButton.disabled = false;
+               exportButton.disabled = false;
+               console.log("Data initialized/updated from Google Sheet and saved to Local Storage."); // Debugging message - updated message
             } else {
-                console.log("Data already present in Local Storage, skipping Google Sheet fetch."); // Debugging message
+                console.warn("Failed to update data from Google Sheet. Using potentially older inventory data from local storage."); // More specific warning
+                alert("Failed to load updated inventory data from Google Sheets. Using potentially older data from local storage. Some data might be outdated. Please check console for errors."); // Updated alert message
+                if(database.length === 0){
+                    viewDataButton.disabled = true; // Disable buttons if even local storage has no data as fallback
+                    searchButton.disabled = true;
+                    clearDatabaseButton.disabled = true;
+                    exportButton.disabled = true;
+                } else {
+                    viewDataButton.disabled = false; // Enable buttons using fallback local storage data
+                    searchButton.disabled = false;
+                    clearDatabaseButton.disabled = false;
+                    exportButton.disabled = false;
+                }
             }
         }
 
@@ -622,7 +623,7 @@
         initializeData(); // Load data on page load
 
 
-        // Import Functionality (Phase 2) - DISABLED
+        // Import Functionality (Phase 2) - DISABLED - No changes needed below this line
         importButton.addEventListener('click', () => {
             alert("Import from Excel file is disabled in this version. Data is automatically loaded from Google Sheet.");
             //fileInput.click(); // Keep this line commented out as import from file is disabled.
@@ -635,7 +636,7 @@
              return;
         }
 
-       // Search Functionality (Phase 3)
+       // Search Functionality (Phase 3) - No changes needed
         searchButton.addEventListener('click', () => {
             const barcode = searchBarcodeInput.value.trim();
 
@@ -694,7 +695,7 @@
            searchResultTable.style.display = 'block';
         }
 
-        // Expiry Date Management (Phase 4) - Same as before
+        // Expiry Date Management (Phase 4) - Same as before - No changes needed
         addExpiryButton.addEventListener('click', addExpiryEntry);
 
         function addExpiryEntry() {
@@ -754,7 +755,7 @@
         }
 
 
-          function isValidDate(dateString){ // Same as before
+          function isValidDate(dateString){ // Same as before - No changes needed
           if(!/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
            return false;
            }
@@ -783,7 +784,7 @@
         }
 
 
-        // Save Entry (Phase 5) - Main Save Button (Now Visible and used for all entries) - Same as before
+        // Save Entry (Phase 5) - Main Save Button (Now Visible and used for all entries) - Same as before - No changes needed
           saveButton.addEventListener('click', () => {
              if(!currentItem){
                 alert("Please search for an item to save!");
@@ -841,7 +842,7 @@
               searchResultTable.style.display = 'none';//Clear the search result table
           });
 
-        // Clear Functions (Phase 6) - Same as before
+        // Clear Functions (Phase 6) - Same as before - No changes needed
         clearFieldsButton.addEventListener('click', clearFields);
 
         function clearFields() {
@@ -877,7 +878,7 @@
        }
 
 
-        // Render Table & List Box (Phase 7) - Same as before
+        // Render Table & List Box (Phase 7) - Same as before - No changes needed
         function renderItemList() {
 
         }
@@ -925,7 +926,7 @@
            });
          }
 
-        function renderDataList(){ //Same as before
+        function renderDataList(){ //Same as before - No changes needed
              if(database.length === 0) {
                 alert("Inventory data is still loading from Google Sheets. Please wait a moment and try again."); // Message if data not yet loaded for view data
                 return;
@@ -956,7 +957,7 @@
         }
 
 
-        // Export Data (Phase 8) - Same as before
+        // Export Data (Phase 8) - Same as before - No changes needed
         exportButton.addEventListener('click', () => {
             if (enteredRecords.length === 0) {
                 alert('No records to export!');
@@ -984,16 +985,16 @@
 
         });
 
-       viewDataButton.addEventListener('click', () =>{ //Same as before
+       viewDataButton.addEventListener('click', () =>{ //Same as before - No changes needed
             renderDataList();
         });
 
 
-        closePopup.addEventListener('click', () => { //Same as before
+        closePopup.addEventListener('click', () => { //Same as before - No changes needed
              dataPopup.style.display = 'none';
           });
 
-          window.addEventListener('click', (event) => { //Same as before
+          window.addEventListener('click', (event) => { //Same as before - No changes needed
             if (event.target === dataPopup) {
               dataPopup.style.display = 'none';
            }
