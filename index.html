@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet"> <!-- Roboto and Roboto Condensed -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"> <!-- Material Icons -->
     <style>
-        /* Reset and Global Styles */
+        /* Reset and Global Styles - Styles remain the same as before */
         body, html {
             margin: 0;
             padding: 0;
@@ -63,7 +63,7 @@
             padding-bottom: 8px;
         }
 
-        /* Button Styles */
+        /* Button Styles - Styles remain the same as before */
         button {
             padding: 10px 16px;
             margin: 4px;
@@ -136,12 +136,12 @@
             background-color: #388E3C; /* Green 700 - Darker green on hover */
         }
 
-        /* Icon Styles */
+        /* Icon Styles - Styles remain the same as before */
         .material-icons {
             vertical-align: middle; /* Align icons with text */
         }
 
-        /* Input Styles */
+        /* Input Styles - Styles remain the same as before */
         input[type="text"], input[type="number"] {
             padding: 12px;
             margin: 4px;
@@ -162,7 +162,7 @@
             font-size: 0.9rem;
         }
 
-        /* Table Styles */
+        /* Table Styles - Styles remain the same as before */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -196,7 +196,7 @@
             border-bottom: none; /* Remove border on last row cells */
         }
 
-        /* Expiry Input Group */
+        /* Expiry Input Group - Styles remain the same as before */
         .expiry-input-group {
             display: flex;
             align-items: center;
@@ -204,7 +204,7 @@
             gap: 8px;
         }
 
-        /* Popup Styles */
+        /* Popup Styles - Styles remain the same as before */
         #dataPopup {
             display: none;
             position: fixed;
@@ -247,7 +247,7 @@
             background-color: #f0f0f0;
         }
 
-        /* Search Result Table Styles */
+        /* Search Result Table Styles - Styles remain the same as before */
         #searchResultTable {
             display: none;
             margin-top: 16px;
@@ -274,7 +274,7 @@
         }
 
 
-        /* Responsive adjustments */
+        /* Responsive adjustments - Styles remain the same as before */
         @media (max-width: 768px) {
             .container {
                 padding: 16px;
@@ -360,6 +360,10 @@
             }
         }
     </style>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
 </head>
 <body>
     <div id="currentDateDisplay"></div>
@@ -369,7 +373,7 @@
         <section class="database-section-container">
             <h2>Database Management</h2>
             <input type="file" id="fileInput" accept=".xlsx, .xls" style="display:none">
-            <button id="importButton"><span class="material-icons">file_upload</span>Import Data</button>
+            <button id="importButton" disabled title="Import from Excel is disabled in this version, data loads automatically from Google Sheet"><span class="material-icons">file_upload</span>Import Data (Disabled)</button>
             <button id="viewDataButton" class="secondary-button" disabled><span class="material-icons">visibility</span>View Data</button>
             <button id="clearDatabaseButton" class="secondary-button" disabled><span class="material-icons">delete_sweep</span>Clear DB</button>
             <button id="exportButton" class="secondary-button" disabled><span class="material-icons">file_download</span>Export Data</button>
@@ -427,34 +431,34 @@
         </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <script>
-         // Firebase Configuration
+         // Firebase configuration
         const firebaseConfig = {
-          apiKey: "AIzaSyCOODiDUvRq7EaOZtmK7C82dAGCtCjEGBI",
-          authDomain: "expiry-record.firebaseapp.com",
-          projectId: "expiry-record",
-          storageBucket: "expiry-record.firebasestorage.app",
-          messagingSenderId: "457082071077",
-          appId: "1:457082071077:web:9ac6b994b459dbdb29f7cc",
-          measurementId: "G-VKENXVTLB5"
+          apiKey: "AIzaSyAqB5syqP1BVfA9dUx3A6zvokDw3oacy_E",
+          authDomain: "data-base-2c8bf.firebaseapp.com",
+          projectId: "data-base-2c8bf",
+          storageBucket: "data-base-2c8bf.firebasestorage.app",
+          messagingSenderId: "958395018379",
+          appId: "1:958395018379:web:53c32ddb4941f3545a788e",
+          measurementId: "G-77TNX586M4"
         };
 
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
-        const databaseFirebase = firebase.database().ref(); // Get reference to the database
+        const analytics = firebase.analytics();
+
+         // Google Sheet CSV URL
+        const googleSheetCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQNrRFFRPe_jrOrDZM58gRqxfsA0deD60_q2jkA7XJRRfJQ7IiBdIqNDN7JdMawjw/pub?output=csv";
 
          // Global variables
-        let database = []; // Will store data fetched from Firebase AND Excel
+        let database = [];
         let currentItem = null;
         let enteredRecords = [];
         let headerMap = {}; // Map to store column index by header
         let barcodeHeader = '';
         let nameHeader = '';
         let expiryHeaderCount = 0;
-        const googleSheetCSVUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQNrRFFRPe_jrOrDZM58gRqxfsA0deD60_q2jkA7XJRRfJQ7IiBdIqNDN7JdMawjw/pub?output=csv";
 
 
         // Get HTML elements
@@ -490,314 +494,196 @@
           }
 
 
-        // Load data from local storage (for entered records only)
+        // Load data from local storage
         function loadDataFromLocalStorage() {
-             try {
-                const storedEnteredRecords = localStorage.getItem('enteredRecords');
-                const storedHeaderMap = localStorage.getItem('headerMap'); //Potentially used if excel import was used before
-                const storedBarcodeHeader = localStorage.getItem('barcodeHeader'); //Potentially used if excel import was used before
-                const storedNameHeader = localStorage.getItem('nameHeader'); //Potentially used if excel import was used before
-                let storedCurrentDate = localStorage.getItem('currentDate');
+             const storedDatabase = localStorage.getItem('database');
+             const storedEnteredRecords = localStorage.getItem('enteredRecords');
+             const storedHeaderMap = localStorage.getItem('headerMap');
+             const storedBarcodeHeader = localStorage.getItem('barcodeHeader');
+            const storedNameHeader = localStorage.getItem('nameHeader');
+             let storedCurrentDate = localStorage.getItem('currentDate');
 
 
-                if (storedEnteredRecords) enteredRecords = JSON.parse(storedEnteredRecords);
-                if (storedHeaderMap) headerMap = JSON.parse(storedHeaderMap);
-                if (storedBarcodeHeader) barcodeHeader = storedBarcodeHeader;
-                if(storedNameHeader) nameHeader = storedNameHeader;
-                if(!storedCurrentDate){
-                        localStorage.setItem('currentDate', getCurrentDateTime());
-                        storedCurrentDate = localStorage.getItem('currentDate')
-                    }
-
-                currentDateDisplay.textContent = `Current Date: ${storedCurrentDate}`;
-                renderEnteredRecords();
-
-                if(database.length >0){ //Keep buttons enabled if data is loaded from ANY source (Excel or Google Sheet)
-                    searchButton.disabled = false;
-                     viewDataButton.disabled = false;
-                     clearDatabaseButton.disabled = false;
-                     exportButton.disabled = false;
+            if (storedDatabase) database = JSON.parse(storedDatabase);
+            if (storedEnteredRecords) enteredRecords = JSON.parse(storedEnteredRecords);
+            if (storedHeaderMap) headerMap = JSON.parse(storedHeaderMap);
+            if (storedBarcodeHeader) barcodeHeader = storedBarcodeHeader;
+             if(storedNameHeader) nameHeader = storedNameHeader;
+              if(!storedCurrentDate){
+                    localStorage.setItem('currentDate', getCurrentDateTime());
+                    storedCurrentDate = localStorage.getItem('currentDate')
                  }
-             } catch (error) {
-                console.error("Error loading data from local storage:", error);
-                alert("Error loading data from local storage. Check console for details.");
+
+               currentDateDisplay.textContent = `Current Date: ${storedCurrentDate}`;
+            renderEnteredRecords();
+
+             if(database.length >0){
+                searchButton.disabled = false;
+                 viewDataButton.disabled = false;
+                 clearDatabaseButton.disabled = false;
+                 exportButton.disabled = false;
              }
          }
 
-        loadDataFromLocalStorage();
 
+        // Function to parse CSV data
+        function parseCSV(csvText) {
+            const lines = csvText.trim().split('\n');
+            const headers = lines[0].split(',').map(header => header.trim());
+            const data = [];
 
-        // Import Functionality (Phase 2) - RE-ENABLED Excel Import
-        importButton.addEventListener('click', () => {
-            fileInput.click();
-        });
-
-        fileInput.addEventListener('change', handleFileImport);
-
-        async function handleFileImport(event) {
-             try {
-                console.log("Excel file import started...");
-                const file = event.target.files[0];
-                if (!file) {
-                    alert('No file selected!');
-                    return;
+            for (let i = 1; i < lines.length; i++) {
+                const currentLine = lines[i].split(',').map(cell => cell.trim());
+                const item = {};
+                for (let j = 0; j < headers.length; j++) {
+                    item[headers[j]] = currentLine[j];
                 }
-
-                 const reader = new FileReader();
-                 reader.onload = (e) => {
-                    try {
-                        console.log("Reading Excel file...");
-                        const data = new Uint8Array(e.target.result);
-                        let workbook;
-                        try{
-                            workbook = XLSX.read(data, { type: 'array' });
-                        }catch(err){
-                            console.error("Error parsing Excel file:", err);
-                            alert('Error parsing Excel file, please check the file format!');
-                            return;
-                        }
-                        const sheetName = workbook.SheetNames[0];
-                        const worksheet = workbook.Sheets[sheetName];
-                        const range = XLSX.utils.decode_range(worksheet['!ref']);
-                         if(range.e.r <1){
-                            alert("File contains no data!");
-                            console.log("Excel file is empty.");
-                            return;
-                        }
-                        const excelData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-                        if (!excelData || excelData.length === 0) {
-                            alert('File is empty or unreadable!');
-                            console.log("Excel data is empty or unreadable after parsing.");
-                            return;
-                        }
-
-                        const headers = excelData[0];
-                        headers.forEach((header, index) => {
-                            if(header && header.toLowerCase().includes('barcode')) {
-                              barcodeHeader = header;
-                            }
-                            if(header && header.toLowerCase().includes('name')){
-                              nameHeader = header;
-                            }
-                             headerMap[header] = index;
-                        });
-
-                         if (!barcodeHeader) {
-                             alert("No 'barcode' column found in the file.");
-                             console.log("No 'barcode' column found in Excel file.");
-                             return;
-                         }
-                         if (!nameHeader){
-                             alert("No 'name' column found in the file.");
-                             console.log("No 'name' column found in Excel file.");
-                             return;
-                         }
-
-                        database = excelData.slice(1);
-
-                        // Optionally, you could also save Excel data to Firebase here if needed
-                        // For now, we'll just use Firebase for Google Sheet data
-
-                        localStorage.setItem('database', JSON.stringify(database)); //Keep excel data in local storage as well (original functionality)
-                         localStorage.setItem('headerMap', JSON.stringify(headerMap));
-                         localStorage.setItem('barcodeHeader', barcodeHeader);
-                          localStorage.setItem('nameHeader', nameHeader);
-                        alert('Data imported successfully from Excel!');
-                        console.log("Excel data imported and stored in local storage.");
-                         renderEnteredRecords();
-                       viewDataButton.disabled = false;
-                       searchButton.disabled = false;
-                       clearDatabaseButton.disabled = false;
-                       exportButton.disabled = false;
-                    } catch (parseError) {
-                       console.error("Error parsing Excel data:", parseError);
-                        alert('Error processing Excel data. Please check file content and format.');
-                    }
-                 };
-
-                 reader.onerror = (readError) =>{
-                     console.error("Error reading Excel file:", readError);
-                        alert('Error reading Excel file. Please try again or select a different file.');
-                };
-
-                 reader.readAsArrayBuffer(file);
-            } catch (error) {
-                console.error("Unexpected error during Excel import:", error);
-                alert('An unexpected error occurred during file import. Check console for details.');
+                data.push(item);
             }
+            return { headers, data };
         }
 
 
-         // Function to fetch data from Google Sheet and load into Firebase and local database
-        async function loadDatabaseFromGoogleSheet() {
+        // Function to fetch data from Google Sheet
+        async function fetchDataFromGoogleSheet() {
             try {
-                console.log("Loading data from Google Sheet started...");
-                const response = await fetch(googleSheetCSVUrl);
+                const response = await fetch(googleSheetCsvUrl);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const csvText = await response.text();
                 const parsedData = parseCSV(csvText);
-                if (parsedData && parsedData.length > 0) {
-                    // Assuming the first row is headers
-                    const headers = parsedData[0];
+                return parsedData;
+            } catch (error) {
+                console.error("Error fetching data from Google Sheet:", error);
+                alert('Failed to load data from Google Sheet. Please check console for details.');
+                return null;
+            }
+        }
+
+
+        async function initializeData() {
+            loadDataFromLocalStorage(); // Try to load from local storage first
+
+            if (database.length === 0) { // If no data in local storage, fetch from Google Sheet
+                const googleSheetData = await fetchDataFromGoogleSheet();
+                if (googleSheetData) {
+                    const { headers, data } = googleSheetData;
+
                     headers.forEach((header, index) => {
                         if(header && header.toLowerCase().includes('barcode')) {
-                            barcodeHeader = header;
+                          barcodeHeader = header;
                         }
                         if(header && header.toLowerCase().includes('name')){
-                            nameHeader = header;
+                          nameHeader = header
                         }
-                        headerMap[header] = index;
+                         headerMap[header] = index; //Still using index as value, but headers are from google sheet now
                     });
 
-                    if (!barcodeHeader) {
-                        alert("No 'barcode' column found in the Google Sheet.");
-                        console.log("No 'barcode' column found in Google Sheet.");
-                        return;
-                    }
-                    if (!nameHeader){
-                        alert("No 'name' column found in the Google Sheet.");
-                        console.log("No 'name' column found in Google Sheet.");
-                        return;
-                    }
+                     if (!barcodeHeader) {
+                         alert("No 'barcode' column found in the Google Sheet data.")
+                         return;
+                     }
+                     if (!nameHeader){
+                         alert("No 'name' column found in the Google Sheet data.");
+                         return;
+                     }
 
-                    // Store data in Firebase Realtime Database, using barcode as key
-                    const itemsRef = databaseFirebase.child('inventoryItems'); // Path in Firebase
-                    const googleSheetDatabaseArray = []; //Separate array for google sheet data
-                    for (let i = 1; i < parsedData.length; i++) { // Start from 1 to skip header row
-                        const itemData = {};
-                        const row = parsedData[i];
-                        let barcodeValue = "";
-                        headers.forEach((header, index) => {
-                            itemData[header] = row[index];
-                            if (header === barcodeHeader) {
-                                barcodeValue = row[index]; // Use barcode as key
-                            }
-                        });
-                        if(barcodeValue){
-                            try {
-                                await itemsRef.child(barcodeValue).set(itemData); // Set data in Firebase
-                            } catch (firebaseError) {
-                                console.error("Error writing to Firebase:", firebaseError);
-                                alert("Error writing data to Firebase. Check console for details. Data loading from Google Sheet might be partially successful.");
-                                return; // Stop processing further if Firebase write fails
-                            }
-                            googleSheetDatabaseArray.push(itemData); // Also keep a local array for search
-                        }
-                    }
+                    // Convert array of objects to array of arrays for database
+                    database = data.map(item => headers.map(header => item[header]));
 
-                    //Merge Google Sheet data with existing database (Excel or previous Google Sheet load)
-                    //Prioritize Google Sheet data in case of barcode conflicts (you can adjust this logic)
-                    const googleSheetBarcodeSet = new Set(googleSheetDatabaseArray.map(item => item[barcodeHeader]));
-                    database = database.filter(item => !googleSheetBarcodeSet.has(item[barcodeHeader])).concat(googleSheetDatabaseArray);
+                    localStorage.setItem('database', JSON.stringify(database));
+                     localStorage.setItem('headerMap', JSON.stringify(headerMap));
+                     localStorage.setItem('barcodeHeader', barcodeHeader);
+                      localStorage.setItem('nameHeader', nameHeader);
 
-
-                    localStorage.setItem('database', JSON.stringify(database)); // Update local storage with merged data
-                    localStorage.setItem('headerMap', JSON.stringify(headerMap)); //Ensure header map is updated if Google Sheet headers are different
-                    localStorage.setItem('barcodeHeader', barcodeHeader);
-                    localStorage.setItem('nameHeader', nameHeader);
-
-
-                    alert('Data loaded from Google Sheets successfully!');
-                    console.log("Data loaded from Google Sheets and Firebase updated.");
-                    enableButtons();
-
-                } else {
-                    alert('No data found in Google Sheet or error parsing CSV.');
-                    console.log("No data or error parsing CSV from Google Sheet.");
-                }
-            } catch (error) {
-                console.error("Error loading data from Google Sheet:", error);
-                alert('Failed to load data from Google Sheets. Please check the URL, your internet connection and console for details.');
-            }
-        }
-
-
-        // CSV Parsing function (No changes needed)
-        function parseCSV(csvText) {
-            const lines = csvText.trim().split('\n');
-            if (lines.length === 0) return [];
-            const headers = lines[0].split(',').map(header => header.trim()); // Assuming comma-separated
-            const data = [];
-            data.push(headers); // Store headers as the first element
-            for (let i = 1; i < lines.length; i++) {
-                const currentLine = lines[i].split(',').map(item => item.trim());
-                if(currentLine.length === headers.length){ //Ensure row has same number of columns as headers
-                    data.push(currentLine);
+                    alert('Data loaded successfully from Google Sheet!');
+                     renderEnteredRecords();
+                   viewDataButton.disabled = false;
+                   searchButton.disabled = false;
+                   clearDatabaseButton.disabled = false;
+                   exportButton.disabled = false;
                 }
             }
-            return data;
         }
 
 
-        function enableButtons() {
-            searchButton.disabled = false;
-            viewDataButton.disabled = false;
-            clearDatabaseButton.disabled = false;
-            exportButton.disabled = false;
+        initializeData(); // Load data on page load
+
+
+        // Import Functionality (Phase 2) - DISABLED
+        importButton.addEventListener('click', () => {
+            alert("Import from Excel file is disabled in this version. Data is automatically loaded from Google Sheet.");
+            //fileInput.click(); // Keep this line commented out as import from file is disabled.
+        });
+
+        fileInput.addEventListener('change', handleFileImport); // Keep this line commented out as import from file is disabled.
+
+        async function handleFileImport(event) { // Keep this function as empty or with alert, as import from file is disabled.
+             alert("Import from Excel file is disabled in this version. Data is automatically loaded from Google Sheet.");
+             return;
         }
 
-        // Load data from Google Sheet on page load
-        loadDatabaseFromGoogleSheet();
-
-
-        // Search Functionality (Phase 3) - Modified to search in local database array (No changes needed)
+       // Search Functionality (Phase 3)
         searchButton.addEventListener('click', () => {
             const barcode = searchBarcodeInput.value.trim();
 
             if(!barcode){
-                alert('Please enter a barcode to search!');
+                alert('Please enter a barcode to search!')
                 return;
             }
             if(database.length === 0){
-                alert('No data loaded yet. Please import Excel or wait for Google Sheet to load.');
+                alert('No data loaded from Google Sheet.')
                 return;
             }
 
-            const foundItem = database.find(item => item[barcodeHeader] === barcode);
+            const foundItem = database.find(item => {
+                const barcodeValue = item[headerMap[barcodeHeader]];
+                return barcodeValue && barcodeValue.toString() === barcode; // Ensure barcodeValue is not undefined and convert to string for comparison
+            });
+
 
             if (foundItem) {
-                currentItem = foundItem;
-                renderSearchResultTable(foundItem);
+              currentItem = foundItem;
+
+                 renderSearchResultTable(foundItem);
                 addExpiryEntry();
                 saveButton.disabled = false;
-                console.log("Item found with barcode:", barcode, foundItem);
             } else {
-                alert("No item found with this barcode!");
-                currentItem = null;
+               alert("No item found with this barcode!")
+
+              currentItem = null;
                 searchResultTable.style.display = 'none';
-                expiryInputs.innerHTML = '';
-                saveButton.disabled = true;
-                console.log("Item not found with barcode:", barcode);
+              expiryInputs.innerHTML = '';
+              saveButton.disabled = true;
             }
         });
 
-        function renderSearchResultTable(foundItem) {
-            const searchResultTableHead = searchResultTable.querySelector('thead');
-            searchResultTableHead.innerHTML = '';
-            const headerRow = document.createElement('tr');
-            for (const header in headerMap) {
-                const th = document.createElement('th');
-                th.textContent = header;
-                headerRow.appendChild(th);
-            }
-            searchResultTableHead.appendChild(headerRow)
+         function renderSearchResultTable(foundItem) {
+           const searchResultTableHead = searchResultTable.querySelector('thead');
+           searchResultTableHead.innerHTML = '';
+           const headerRow = document.createElement('tr');
+          for (const header in headerMap) {
+           const th = document.createElement('th');
+           th.textContent = header;
+           headerRow.appendChild(th);
+          }
+           searchResultTableHead.appendChild(headerRow)
 
-            searchResultTableBody = '';
+             searchResultTableBody.innerHTML = '';
 
-            const row = document.createElement('tr');
-            for (const header in headerMap) {
-                const td = document.createElement('td');
-                td.textContent = foundItem[header];
-                row.appendChild(td)
-            }
+               const row = document.createElement('tr');
+             for (const header in headerMap) {
+               const td = document.createElement('td');
+               td.textContent = foundItem[headerMap[header]];
+               row.appendChild(td)
+              }
 
-            searchResultTableBody.appendChild(row);
-            searchResultTable.style.display = 'block';
+             searchResultTableBody.appendChild(row);
+           searchResultTable.style.display = 'block';
         }
 
-        // Expiry Date Management (Phase 4) - No changes needed
+        // Expiry Date Management (Phase 4) - Same as before
         addExpiryButton.addEventListener('click', addExpiryEntry);
 
         function addExpiryEntry() {
@@ -807,23 +693,23 @@
             const dateInput = document.createElement('input');
             dateInput.type = 'text';
             dateInput.placeholder = 'Expiry Date (dd/mm/yyyy)';
-            dateInput.addEventListener('input', (e) => {
-                let value = e.target.value.replace(/[^0-9]/g, '');
-                if (value.length > 8){
+           dateInput.addEventListener('input', (e) => {
+              let value = e.target.value.replace(/[^0-9]/g, '');
+                 if (value.length > 8){
                     value = value.substring(0, 8);
-                }
+                   }
                 if (value.length > 2) {
-                    value = value.substring(0,2) + "/" + value.substring(2);
-                }
-                if (value.length > 5) {
-                    value = value.substring(0, 5) + "/" + value.substring(5);
-                }
-                e.target.value = value;
+                  value = value.substring(0,2) + "/" + value.substring(2);
+               }
+               if (value.length > 5) {
+                  value = value.substring(0, 5) + "/" + value.substring(5);
+              }
+              e.target.value = value;
             });
-            dateInput.addEventListener('blur', (e) =>{
+             dateInput.addEventListener('blur', (e) =>{
                 if(!isValidDate(e.target.value)){
-                    alert('Invalid date, Please use correct dd/mm/yyyy format, Ensure that the date is not in the past or too far into the future!');
-                    e.target.value = '';
+                   alert('Invalid date, Please use correct dd/mm/yyyy format, Ensure that the date is not in the past or too far into the future!');
+                   e.target.value = '';
                 }
             });
 
@@ -857,213 +743,200 @@
         }
 
 
-        function isValidDate(dateString){
-            if(!/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
-                return false;
-            }
+          function isValidDate(dateString){ // Same as before
+          if(!/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
+           return false;
+           }
 
-            const [day, month, year] = dateString.split('/').map(Number);
-            const date = new Date(year, month-1, day);
+           const [day, month, year] = dateString.split('/').map(Number);
+          const date = new Date(year, month-1, day);
 
-            if (date.getDate() !== day || date.getMonth() + 1 !== month || date.getFullYear() !== year) {
-                return false;
-            }
-            const currentDate = new Date();
-            const futureDate = new Date();
-            futureDate.setFullYear(currentDate.getFullYear() + 5);
+           if (date.getDate() !== day || date.getMonth() + 1 !== month || date.getFullYear() !== year) {
+           return false;
+           }
+             const currentDate = new Date();
+             const futureDate = new Date();
+              futureDate.setFullYear(currentDate.getFullYear() + 5);
 
-            if (date.getTime() < currentDate.getTime()) {
-                return false;
+           if (date.getTime() < currentDate.getTime()) {
+             return false;
             }
-            if (date.getTime() > futureDate.getTime()) {
-                return false;
-            }
+          if (date.getTime() > futureDate.getTime()) {
+             return false;
+           }
             if(date.getTime() === currentDate.getTime()){
-                return false;
-            }
+            return false;
+           }
 
-            return true;
+          return true;
         }
 
 
-        // Save Entry (Phase 5) - Main Save Button (Now Visible and used for all entries) - No changes needed
-        saveButton.addEventListener('click', () => {
-            if(!currentItem){
+        // Save Entry (Phase 5) - Main Save Button (Now Visible and used for all entries) - Same as before
+          saveButton.addEventListener('click', () => {
+             if(!currentItem){
                 alert("Please search for an item to save!");
-                return;
+                 return;
+             }
+           const expiryEntries = expiryInputs.querySelectorAll('.expiry-input-group'); // Select by class name
+           if (expiryEntries.length === 0) {
+             alert('Please add at least one expiry entry!');
+              return;
             }
-            const expiryEntries = expiryInputs.querySelectorAll('.expiry-input-group'); // Select by class name
-            if (expiryEntries.length === 0) {
-                alert('Please add at least one expiry entry!');
-                return;
-            }
-            const itemData = {};
-            for(const header in headerMap) {
-                itemData[header] = currentItem[header]; //currentItem is already an object
-            }
+             const itemData = {};
+             for(const header in headerMap) {
+               itemData[header] = currentItem[headerMap[header]];
+             }
 
-            const existingRecordIndex = enteredRecords.findIndex(record => record[barcodeHeader] === itemData[barcodeHeader]);
+             const existingRecordIndex = enteredRecords.findIndex(record => record[barcodeHeader] === itemData[barcodeHeader]);
 
-            let record = existingRecordIndex === -1 ? {...itemData} : enteredRecords[existingRecordIndex]
+           let record = existingRecordIndex === -1 ? {...itemData} : enteredRecords[existingRecordIndex]
 
 
-            let count = 1;
-            if(existingRecordIndex !== -1){
-                for(let i = 1; ; i++) {
+          let count = 1;
+          if(existingRecordIndex !== -1){
+              for(let i = 1; ; i++) {
                     const expiryDateKey = `expiryDate${i}`;
-                    if (record.hasOwnProperty(expiryDateKey)){
-                        count++;
-                    }else {
-                        break;
+                   if (record.hasOwnProperty(expiryDateKey)){
+                         count++;
+                   }else {
+                    break;
                     }
-                }
+               }
+             }
+              const saveTime = getCurrentDateTime();
+          record[`recordTime`] = saveTime;
+        expiryEntries.forEach(entryDiv =>{
+            const dateInput = entryDiv.querySelector('input[type="text"]');
+            const quantityInput = entryDiv.querySelector('input[type="number"]');
+            if(!dateInput.value || !quantityInput.value){
+              alert("Please ensure you have filled out all date and quantity entries!");
+              return;
             }
-            const saveTime = getCurrentDateTime();
-            record[`recordTime`] = saveTime;
-            expiryEntries.forEach(entryDiv =>{
-                const dateInput = entryDiv.querySelector('input[type="text"]');
-                const quantityInput = entryDiv.querySelector('input[type="number"]');
-                if(!dateInput.value || !quantityInput.value){
-                    alert("Please ensure you have filled out all date and quantity entries!");
-                    return;
-                }
 
-                record[`expiryDate${count}`] = dateInput.value;
-                record[`quantity${count}`] = parseInt(quantityInput.value, 10);
-                count++;
-            });
+               record[`expiryDate${count}`] = dateInput.value;
+               record[`quantity${count}`] = parseInt(quantityInput.value, 10);
+             count++;
+           });
 
-            if (existingRecordIndex === -1){
-                enteredRecords.push(record);
-            }
+           if (existingRecordIndex === -1){
+             enteredRecords.push(record);
+           }
 
             localStorage.setItem('enteredRecords', JSON.stringify(enteredRecords));
-            renderEnteredRecords();
-            clearFields();
+             renderEnteredRecords();
+             clearFields();
             searchBarcodeInput.value = ''; // Clear the search input
-            searchResultTable.style.display = 'none';//Clear the search result table
-            console.log("Expiry data saved for item:", itemData[nameHeader] || itemData[barcodeHeader]);
-        });
+              searchResultTable.style.display = 'none';//Clear the search result table
+          });
 
-        // Clear Functions (Phase 6) - No changes needed
+        // Clear Functions (Phase 6) - Same as before
         clearFieldsButton.addEventListener('click', clearFields);
 
         function clearFields() {
-            expiryInputs.innerHTML = '';
+             expiryInputs.innerHTML = '';
         }
         clearDatabaseButton.addEventListener('click', clearDatabase);
 
-        async function clearDatabase() {
-           try {
-               database = []; // Clear local database array
-               currentItem = null;
-               enteredRecords = [];
-               headerMap = {};
-               barcodeHeader = '';
-               nameHeader = '';
-               expiryHeaderCount = 0;
+          function clearDatabase() {
+           database = [];
+           currentItem = null;
+           enteredRecords = [];
+           headerMap = {};
+           barcodeHeader = '';
+           nameHeader = '';
+           expiryHeaderCount = 0;
 
-               recordTableBody.innerHTML = '';
-               searchBarcodeInput.value = '';
-               clearFields();
-               saveButton.disabled = true;
-               viewDataButton.disabled = true;
-               searchButton.disabled = true;
-               clearDatabaseButton.disabled = true;
-               exportButton.disabled = true;
-               searchResultTable.style.display = 'none';
-               localStorage.clear();
-
-               // Optionally clear Firebase Database as well if you want to completely reset online data
-               const itemsRef = firebase.database().ref('inventoryItems');
-               await itemsRef.remove(); // Use await for promise resolution
-               console.log("Firebase online data cleared.");
-               alert("Database and Firebase online data cleared!");
-               loadDatabaseFromGoogleSheet(); // Optionally reload from Google Sheet after clearing Firebase
-           } catch (error) {
-               console.error("Error clearing database:", error);
-               alert("Error clearing database. Local data cleared, but Firebase clear may have failed. Check console.");
-           }
-         alert("Local database has been cleared!");
+           recordTableBody.innerHTML = '';
+           searchBarcodeInput.value = '';
+           clearFields();
+           saveButton.disabled = true;
+           viewDataButton.disabled = true;
+           searchButton.disabled = true;
+           clearDatabaseButton.disabled = true;
+           exportButton.disabled = true;
+           searchResultTable.style.display = 'none';
+           localStorage.clear();
+         alert("Database has been cleared!");
        }
 
 
-        // Render Table & List Box (Phase 7) - No changes needed
+        // Render Table & List Box (Phase 7) - Same as before
         function renderItemList() {
 
         }
 
-        function renderEnteredRecords() {
+           function renderEnteredRecords() {
             const tableHead = recordTable.querySelector('thead');
-            const tableBody = recordTable.querySelector('tbody');
+                const tableBody = recordTable.querySelector('tbody');
 
-            // Clear existing table headers and body
-            tableHead.innerHTML = '';
-            tableBody.innerHTML = '';
+                // Clear existing table headers and body
+                tableHead.innerHTML = '';
+                tableBody.innerHTML = '';
 
-            // Extract all unique headers from the data
-            const allHeaders = new Set();
-            enteredRecords.forEach(record => {
-                for (const key in record) {
-                    allHeaders.add(key);
-                }
-            });
-            const headerRow = document.createElement('tr');
-            allHeaders.forEach(header => {
-                const headerCell = document.createElement('th');
-                headerCell.textContent = header;
-                headerRow.appendChild(headerCell);
-            });
+                 // Extract all unique headers from the data
+                 const allHeaders = new Set();
+                enteredRecords.forEach(record => {
+                   for (const key in record) {
+                     allHeaders.add(key);
+                    }
+                  });
+                  const headerRow = document.createElement('tr');
+                   allHeaders.forEach(header => {
+                   const headerCell = document.createElement('th');
+                   headerCell.textContent = header;
+                  headerRow.appendChild(headerCell);
+                 });
 
-            const recordTimeHeader = document.createElement('th');
-            recordTimeHeader.textContent = "Recording Time";
-            headerRow.appendChild(recordTimeHeader);
+                  const recordTimeHeader = document.createElement('th');
+                  recordTimeHeader.textContent = "Recording Time";
+                  headerRow.appendChild(recordTimeHeader);
 
-            tableHead.appendChild(headerRow)
+                 tableHead.appendChild(headerRow)
 
-            enteredRecords.forEach(record => {
-                const row = document.createElement('tr');
-                allHeaders.forEach(key => {
-                    const cell = document.createElement('td');
-                    cell.textContent = record[key] || '';
-                    row.appendChild(cell);
-                });
-                const recordTimeCell = document.createElement('td');
-                recordTimeCell.textContent = record.recordTime || '';
-                row.appendChild(recordTimeCell);
+              enteredRecords.forEach(record => {
+                  const row = document.createElement('tr');
+                  allHeaders.forEach(key => {
+                     const cell = document.createElement('td');
+                       cell.textContent = record[key] || '';
+                       row.appendChild(cell);
+                  });
+                   const recordTimeCell = document.createElement('td');
+                    recordTimeCell.textContent = record.recordTime || '';
+                     row.appendChild(recordTimeCell);
 
-                tableBody.appendChild(row);
-            });
-        }
+                   tableBody.appendChild(row);
+           });
+         }
 
-        function renderDataList(){
-            const popupTable = document.getElementById('popupTable');
+        function renderDataList(){ //Same as before
+             const popupTable = document.getElementById('popupTable');
             popupTable.innerHTML = '';
 
             const headers = Object.keys(headerMap);
             const headerRow = document.createElement('tr');
             headers.forEach(headerText => {
-                const th = document.createElement('th');
-                th.textContent = headerText;
-                headerRow.appendChild(th);
+              const th = document.createElement('th');
+              th.textContent = headerText;
+              headerRow.appendChild(th);
             });
             popupTable.appendChild(headerRow);
 
-            database.forEach(item => { // database is already an array of objects
-                const tr = document.createElement('tr');
-                for (const header in headerMap) {
-                    const td = document.createElement('td');
-                    td.textContent = item[header];
-                    tr.appendChild(td);
-                }
-                popupTable.appendChild(tr);
+            database.forEach(row => {
+              const tr = document.createElement('tr');
+              for (const header in headerMap) {
+                const td = document.createElement('td');
+                td.textContent = row[headerMap[header]];
+                tr.appendChild(td);
+              }
+              popupTable.appendChild(tr);
             });
 
             dataPopup.style.display = 'flex';
         }
 
 
-        // Export Data (Phase 8) - No changes needed
+        // Export Data (Phase 8) - Same as before
         exportButton.addEventListener('click', () => {
             if (enteredRecords.length === 0) {
                 alert('No records to export!');
@@ -1076,35 +949,36 @@
                 XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventory Records');
                 XLSX.writeFile(workbook, 'inventory_records.xlsx');
                 enteredRecords = [];
-                localStorage.setItem('enteredRecords', JSON.stringify(enteredRecords));
+               localStorage.setItem('enteredRecords', JSON.stringify(enteredRecords));
                 renderEnteredRecords();
                 alert('Data exported successfully and records cleared!');
-                console.log("Entered records exported to Excel and cleared.");
             } catch (error) {
                 console.error("Error during export:", error);
                 alert('An error occurred while exporting the data.');
             }
         });
 
-        viewDataButton.addEventListener('click', () =>{
+       viewDataButton.addEventListener('click', () =>{ //Same as before
             if(database.length === 0){
-                alert("Data is still loading, or no data has been imported yet.")
+               alert("Please wait for data to load from Google Sheet to display data!")
                 return;
             }
-            renderDataList();
+           renderDataList();
         });
 
 
-        closePopup.addEventListener('click', () => {
-            dataPopup.style.display = 'none';
-        });
+        closePopup.addEventListener('click', () => { //Same as before
+             dataPopup.style.display = 'none';
+          });
 
-        window.addEventListener('click', (event) => {
+          window.addEventListener('click', (event) => { //Same as before
             if (event.target === dataPopup) {
-                dataPopup.style.display = 'none';
-            }
-        });
+              dataPopup.style.display = 'none';
+           }
+         });
 
+        // Function for individual Save Entry - REMOVED as per request
+        // function saveSingleEntry(entryDiv) { ... }
     </script>
 </body>
 </html>
